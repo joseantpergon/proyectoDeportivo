@@ -103,6 +103,11 @@ namespace proyectoDeportiva.Data.Migrations
                         .HasColumnType("nvarchar(256)")
                         .HasMaxLength(256);
 
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("password");
+
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
