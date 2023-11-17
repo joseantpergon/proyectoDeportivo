@@ -1,0 +1,53 @@
+﻿@page "/pistas"
+@using proyectoDeportiva.Areas.Identity.Data
+@using proyectoDeportiva.Data
+@using MudBlazor
+
+@inject ILogger<PistasPage> Logger
+
+@inject ApplicationDbContext _ApplicationDbContext
+
+<h3>Pistas</h3>
+
+<div class="pistas-container">
+    @foreach (var pista in pistas)
+    {
+        <MudCard Class="pista-card" BackgroundColor="@GetBackgroundColor(pista)">
+            <MudCardContent>
+                <MudText Typo="Typo.h6">@pista.Nombre</MudText>
+                <MudText Typo="Typo.caption">@pista.TipoDeporte</MudText>
+                <MudIcon Icon="@(pista.Estado == "DISPONIBLE" ? Icons.Filled.AccessTime : Icons.Filled.Lock)" Size="Size.Small" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton OnClick="@(() => ReservarPista(pista))" Color="Color.Primary" Disabled="@IsButtonDisabled(pista)">Reservar</MudButton>
+            </MudCardActions>
+        </MudCard>
+    }
+</div>
+
+@code {
+    List<Pista> pistas;
+
+    protected override void OnInitialized()
+    {
+        pistas = _ApplicationDbContext.Pistas.ToList();
+    }
+
+    private void ReservarPista(Pista pista)
+    {
+        // Realiza aquí la lógica para cambiar el estado de DISPONIBLE a OCUPADA en la base de datos
+        // También puedes agregar lógica adicional, como mostrar un mensaje de confirmación
+        // y actualizar la lista de pistas
+        pista.Estado = "OCUPADA";
+    }
+
+    private string GetBackgroundColor(Pista pista)
+    {
+        return pista.Estado == "DISPONIBLE" ? "Success" : "Error";
+    }
+
+    private bool IsButtonDisabled(Pista pista)
+    {
+        return pista.Estado == "OCUPADA";
+    }
+}
