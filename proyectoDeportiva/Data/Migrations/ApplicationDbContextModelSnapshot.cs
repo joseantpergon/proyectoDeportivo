@@ -63,6 +63,9 @@ namespace proyectoDeportiva.Data.Migrations
                     b.Property<DateTime>("FechaReserva")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime>("DiaReserva")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<TimeSpan>("HoraFin")
                         .HasColumnType("time(6)");
 

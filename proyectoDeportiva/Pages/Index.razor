@@ -1,12 +1,54 @@
 ﻿@page "/"
 
-<MudSnackbar @bind-Open="@mostrarSnackbar" Message="Operación exitosa" Severity="Severity.Success" />
+<div style="display: flex; justify-content: center;  height: 100vh;">
 
-@code {
-    private bool mostrarSnackbar;
+<MudGrid Style="max-width: 1250px; flex-wrap:nowrap">
+    <MudItem Style="width: 250px; margin: 10px" xs="12" sm="6" md="3">
+        <MudCard >
+            <MudCardMedia>
+                <img src="https://via.placeholder.com/300" alt="Imagen de la Tarjeta 1" />
+            </MudCardMedia>
+            <MudCardContent>
+                <MudTypography Typo="Typo.h6">Tarjeta 1</MudTypography>
+                <p>Contenido de prueba para la tarjeta 1.</p>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
 
-    private void mostrarSnackbar(bool isOpen)
-    {
-        mostrarSnackbar = isOpen;
-    }
-}
+    <MudItem Style="width: 250px; margin: 10px" xs="12" sm="6" md="3">
+        <MudCard>
+            <MudCardMedia>
+                <img src="https://via.placeholder.com/300" alt="Imagen de la Tarjeta 2" />
+            </MudCardMedia>
+            <MudCardContent>
+                <MudTypography Typo="Typo.h6">Tarjeta 2</MudTypography>
+                <p>Contenido de prueba para la tarjeta 2.</p>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem Style="width: 250px; margin: 10px" xs="12" sm="6" md="3">
+        <MudCard>
+            <MudCardMedia>
+                <MudImage Src="https://via.placeholder.com/300" Alt="Imagen de la Tarjeta 3" />
+            </MudCardMedia>
+            <MudCardContent>
+                <MudTypography Typo="Typo.h6">Tarjeta 3</MudTypography>
+                <p>Contenido de prueba para la tarjeta 3.</p>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem Style="width: 250px; margin: 10px" xs="12" sm="6" md="3">
+        <MudCard>
+            <MudCardMedia>
+                <img src="https://via.placeholder.com/300" alt="Imagen de la Tarjeta 4" />
+            </MudCardMedia>
+            <MudCardContent>
+                <MudTypography Typo="Typo.h6">Tarjeta 4</MudTypography>
+                <p>Contenido de prueba para la tarjeta 4.</p>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+</div>

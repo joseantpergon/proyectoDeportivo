@@ -1,0 +1,155 @@
+﻿@inherits ComponentBase
+@using proyectoDeportiva.Areas.Identity.Data
+@using proyectoDeportiva.Data
+@using MudBlazor
+@using System.Globalization
+
+@inject IDialogService DialogService
+@inject NavigationManager _navigationManager
+@inject ApplicationDbContext _ApplicationDbContext
+
+
+<MudGrid>
+
+    <MudItem xs="12">
+        <div class="semana-navegacion">
+            <MudButton OnClick="IrSemanaAnterior" Disabled="@esSemanaActual"><MudIcon Icon="@Icons.Material.Filled.ArrowCircleLeft"></MudIcon></MudButton>
+            <span>@primerDiaSemana.ToString("dd/MM/yyyy") - @ultimoDiaSemana.ToString("dd/MM/yyyy")</span>
+            <MudButton OnClick="IrSemanaSiguiente" Disabled="@esSemanaSiguiente"><MudIcon Icon="@Icons.Material.Filled.ArrowCircleRight" /></MudButton>
+        </div>
+    </MudItem>
+
+    <MudItem xs="12">
+        <table class="calendario">
+            <tr>
+                @foreach (var dia in ObtenerDiasSemana())
+                {
+                    <th>@dia.ToString("dddd")</th>
+                }
+            </tr>
+            <tr>
+                @foreach (var dia in ObtenerDiasSemana())
+                {
+                    <td>
+          
+                            @foreach(var hora in horario)
+                            {
+                                <MudButton Variant="Variant.Outlined" Color="Color.Info" OnClick="() => ActivarDialogoReserva(dia,hora)" Style="margin-bottom: 10px" Disabled="@IsReserved(hora,dia, pista)">
+                                        @hora.ToString("hh\\:mm")
+                                </MudButton>
+                            }
+                    </td>
+                }
+            </tr>
+        </table>
+    </MudItem>
+
+    
+</MudGrid>
+
+
+
+@code {
+    [Parameter]
+    public Pista pista { get; set; }
+
+
+
+    private DateTime fechaActual;
+    private DateTime primerDiaSemana;
+    private DateTime ultimoDiaSemana;
+
+    private bool esSemanaActual => primerDiaSemana <= fechaActual && fechaActual <= ultimoDiaSemana;
+    private bool esSemanaSiguiente => !esSemanaActual;
+
+    private List<TimeSpan> horario = new List<TimeSpan>();
+
+    private List<Reserva> reservas = new List<Reserva>();
+
+    private bool IsReserved(TimeSpan hora, DateTime diaReserva, Pista pista)
+    {
+        return reservas.Any(reserva =>
+            reserva.HoraInicio == hora &&
+            reserva.DiaReserva.Date == diaReserva.Date &&
+            (reserva.Pista != null && reserva.Pista.Id == pista.Id)
+        );
+    }
+   
+    protected override void OnInitialized()
+    {
+        // Obtener la fecha actual
+        fechaActual = DateTime.Now;
+
+        // Obtener el primer día de la semana (lunes)
+        primerDiaSemana = fechaActual.AddDays(-(int)fechaActual.DayOfWeek + (int)DayOfWeek.Monday);
+
+        // Obtener el último día de la semana (domingo)
+        ultimoDiaSemana = primerDiaSemana.AddDays(6);
+
+        GenerarHorario();
+
+        reservas = _ApplicationDbContext.Reservas.ToList();
+
+    }
+
+    private void GenerarHorario()
+    {
+        TimeSpan horaActual = pista.HorarioApertura;
+
+        while (horaActual <= pista.HorarioCierre)
+        {
+            horario.Add(horaActual);
+            horaActual = horaActual.Add(new TimeSpan(1, 0, 0)); // Agregar 1 hora
+        }
+    }
+
+    private List<DateTime> ObtenerDiasSemana()
+    {
+        // Obtener los días de la semana
+        var diasSemana = new List<DateTime>();
+        for (int i = 0; i < 7; i++)
+        {
+            diasSemana.Add(primerDiaSemana.AddDays(i));
+        }
+        return diasSemana;
+    }
+
+    private void IrSemanaAnterior()
+    {
+        // Lógica para ir a la semana anterior
+        primerDiaSemana = primerDiaSemana.AddDays(-7);
+        ultimoDiaSemana = ultimoDiaSemana.AddDays(-7);
+    }
+
+    private void IrSemanaSiguiente()
+    {
+        // Lógica para ir a la semana siguiente
+        primerDiaSemana = primerDiaSemana.AddDays(7);
+        ultimoDiaSemana = ultimoDiaSemana.AddDays(7);
+    }
+
+
+    private async Task ActivarDialogoReserva(DateTime fechaReserva, TimeSpan horaReserva)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(ReservaDialog.HoraReserva), horaReserva },
+            { nameof(ReservaDialog.FechaReserva), fechaReserva },
+            { nameof(ReservaDialog.pista), pista }
+        };
+
+        var dialog = DialogService.Show<ReservaDialog>("Reserva", parameters);
+        var result = await dialog.Result;
+
+        // Manejar el resultado del diálogo si es necesario
+        if (!result.Cancelled)
+        {
+            // Confirmó la reserva
+            // Realiza acciones adicionales si es necesario
+
+
+        }
+       
+    }
+
+}
