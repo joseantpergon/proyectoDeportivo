@@ -1,0 +1,100 @@
+﻿@page "/pistas/{pistaId}"
+
+@using proyectoDeportiva.Areas.Identity.Data
+@using proyectoDeportiva.Data
+@using MudBlazor
+@using System.Globalization
+@using proyectoDeportiva.Components
+
+@inject ILogger<PistasPage> Logger
+@inject ApplicationDbContext _ApplicationDbContext
+
+<MudCard>
+    <MudCardContent>
+        <h2>
+            Detalles de la Pista
+        </h2>
+        @if (pista != null)
+        {
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <h4>Información de la Pista</h4>
+                    <MudList>
+                        <MudListItem>
+                            <span class="font-weight-bold">Nombre:</span>
+                            <span>@pista.Nombre</span>
+                        </MudListItem>
+                        <MudListItem>
+                            <span class="font-weight-bold">Estado:</span>
+                            <span>@pista.Estado</span>
+                        </MudListItem>
+                        <MudListItem>
+                            <span class="font-weight-bold">Tipo de Deporte:</span>
+                            <span>@pista.TipoDeporte</span>
+                        </MudListItem>
+                        <MudListItem>
+                            <span class="font-weight-bold">Horario de Apertura:</span>
+                            <span>@pista.HorarioApertura.ToString("hh\\:mm")</span>
+                        </MudListItem>
+                        <MudListItem>
+                            <span class="font-weight-bold">Horario de Cierre:</span>
+                            <span>@pista.HorarioCierre.ToString("hh\\:mm")</span>
+                        </MudListItem>
+                        <MudListItem>
+                            <span class="font-weight-bold">Capacidad Máxima:</span>
+                            <span>@pista.CapacidadMaxima</span>
+                        </MudListItem>
+                    </MudList>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <h4>Reserva</h4>
+                    <CalendarioHora pista="pista" />
+                    
+                </MudItem>
+            </MudGrid>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter]
+    public string PistaId { get; set; }
+
+    private Pista pista;
+    
+    private DateTime fechaReserva = DateTime.Now;
+    private TimeSpan horaReserva = TimeSpan.Zero;
+
+    protected override void OnInitialized()
+    {
+        CargarPistaDesdeLista();
+    }
+
+    private void CargarPistaDesdeLista()
+    {
+        if (int.TryParse(PistaId, out var pistaId))
+        {
+            pista = _ApplicationDbContext.Pistas.FirstOrDefault(p => p.Id == pistaId);
+        }
+    }
+
+    private void ActualizarFechaReserva(DateTime nuevaFecha)
+    {
+        fechaReserva = nuevaFecha;
+    }
+
+    private void ActualizarHoraReserva(TimeSpan nuevaHora)
+    {
+        horaReserva = nuevaHora;
+    }
+
+    private void ReservarPista()
+    {
+        // Lógica para reservar la pista
+        // Utiliza fechaReserva y horaReserva para realizar la reserva
+        // Ejemplo:
+        // reservaService.ReservarPista(pista.Id, usuario.Id, fechaReserva, horaReserva);
+
+        // Después de realizar la reserva, puedes recargar la página o realizar alguna acción adicional.
+    }
+}

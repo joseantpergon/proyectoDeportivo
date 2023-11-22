@@ -11,8 +11,8 @@ namespace proyectoDeportiva.Areas.Identity.Data
 		public string Nombre { get; set; }
 		public string Estado{ get; set; }
 		public string TipoDeporte { get; set; }
-		public TimeSpan? HorarioApertura { get; set; }
-		public TimeSpan? HorarioCierre { get; set; }
+		public TimeSpan HorarioApertura { get; set; }
+		public TimeSpan HorarioCierre { get; set; }
 		public int? CapacidadMaxima { get; set; }
 	}
 

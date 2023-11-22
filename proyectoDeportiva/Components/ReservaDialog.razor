@@ -1,0 +1,76 @@
+﻿@using proyectoDeportiva.Areas.Identity.Data
+@using proyectoDeportiva.Data
+@using proyectoDeportiva.Pages
+@using MudBlazor
+@using System.Globalization
+
+@inject ILogger<PistasPage> Logger
+@inject NavigationManager NavigationManager;
+@inject ApplicationDbContext _ApplicationDbContext;
+
+<MudDialog>
+    <DialogContent>
+
+
+
+        <p>¿Desea confirmar su reserva para el dia @FechaReserva.Day de @FechaReserva.ToString("MMMM") a las @HoraReserva.ToString("hh\\:mm") ?</p>
+
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" OnClick="Cancel"> Cancelar</MudButton>
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">Confirmar</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public DateTime FechaReserva { get; set; }
+    [Parameter] public TimeSpan HoraReserva { get; set; }
+    [Parameter] public Pista pista { get; set; }
+
+
+
+    void Cancel() => MudDialog.Cancel();
+
+    void Submit()
+    {
+        if (pista == null)
+        {
+            // Pista no válida, maneja el error según sea necesario
+            Console.WriteLine("La pista no está especificada correctamente.");
+            return;
+        }
+        // Crea la reserva
+
+        try
+        {
+
+            Console.WriteLine("HOLAAAAA");
+            var nuevaReserva = new Reserva
+                {
+                    FechaReserva = DateTime.Now,
+                    DiaReserva = FechaReserva.Date, // Asigna solo la fecha sin la parte de la hora
+                    HoraInicio = HoraReserva,
+                    HoraFin = HoraReserva.Add(new TimeSpan(1, 0, 0)), // Añade 1 hora para obtener la hora de finalización
+                    Usuario = null, // Asigna el usuario actual
+                    Pista = pista // Asegúrate de que pista esté definida en tu componente
+                };
+
+            // Crea la reserva en la base de datos
+            _ApplicationDbContext.Reservas.Add(nuevaReserva);
+            _ApplicationDbContext.SaveChanges();
+
+            // Cierra el cuadro de diálogo después de crear la reserva
+            MudDialog.Close(DialogResult.Ok(true));
+
+            NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al procesar la reserva: {ex.Message}");
+        }
+    }
+}

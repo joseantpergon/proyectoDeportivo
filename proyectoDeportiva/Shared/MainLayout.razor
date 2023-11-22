@@ -2,19 +2,31 @@
 
 <PageTitle>proyectoDeportiva</PageTitle>
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
-    <main>
-        <div class="top-row px-4 auth">
-            <LoginDisplay />
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+<MudLayout>
+    <NavMenu ToggleNavMenu="ToggleNavMenu" />
+   <MudDrawer @bind-Open="@IsNavMenuOpen" Elevation="1">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">My App</MudText>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <MudNavLink Match="NavLinkMatch.All" Href="" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All" Href="/pistas" Icon="@Icons.Material.Filled.EditCalendar">Reservas</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent >
+        @Body
+    </MudMainContent>
+</MudLayout>
+@code {
+    private bool IsNavMenuOpen { get; set; }
+
+    private void ToggleNavMenu()
+    {
+        IsNavMenuOpen = !IsNavMenuOpen;
+    }
+}
