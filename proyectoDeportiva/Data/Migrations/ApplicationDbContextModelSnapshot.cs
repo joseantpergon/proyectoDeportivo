@@ -34,10 +34,10 @@ namespace proyectoDeportiva.Data.Migrations
                         .HasConversion<string>(); ;
                        
 
-                    b.Property<TimeSpan?>("HorarioApertura")
+                    b.Property<TimeSpan>("HorarioApertura")
                         .HasColumnType("time(6)");
 
-                    b.Property<TimeSpan?>("HorarioCierre")
+                    b.Property<TimeSpan>("HorarioCierre")
                         .HasColumnType("time(6)");
 
                     b.Property<string>("Nombre")
@@ -89,8 +89,8 @@ namespace proyectoDeportiva.Data.Migrations
 
             modelBuilder.Entity("proyectoDeportiva.Areas.Identity.Data.User", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
+                    b.Property<int>("Id")
+                        .HasColumnType("int(11)");
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
@@ -113,10 +113,11 @@ namespace proyectoDeportiva.Data.Migrations
                     b.Property<string>("NormalizedEmail")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("NormalizedUserName")
-                        .HasColumnType("longtext");
+					b.Property<string>("NormalizedUserName")
+						.HasMaxLength(256)
+						.HasColumnType("varchar(256)");
 
-                    b.Property<string>("PasswordHash")
+					b.Property<string>("PasswordHash")
                         .HasColumnType("longtext");
 
                     b.Property<string>("PhoneNumber")
@@ -125,8 +126,8 @@ namespace proyectoDeportiva.Data.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<int>("Rol")
-                        .HasColumnType("int");
+                    b.Property<string>("Rol")
+                        .HasColumnType("longtext");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("longtext");
@@ -137,9 +138,21 @@ namespace proyectoDeportiva.Data.Migrations
                     b.Property<string>("UserName")
                         .HasColumnType("longtext");
 
+
+                    b.Property<string>("DNI")
+                        .HasColumnType("char(9)");
+
+                    b.Property<DateTime>("FechaNacimiento")
+                        .HasColumnType("datetime(6)");
+
+
                     b.HasKey("Id");
 
-                    b.ToTable("user", (string)null);
+					b.HasIndex("NormalizedUserName")
+						.IsUnique()
+						.HasDatabaseName("UserNameIndex");
+
+					b.ToTable("user", (string)null);
                 });
 
             modelBuilder.Entity("proyectoDeportiva.Areas.Identity.Data.Reserva", b =>
