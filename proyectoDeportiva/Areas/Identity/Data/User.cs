@@ -9,11 +9,4 @@ namespace proyectoDeportiva.Areas.Identity.Data
 
     }
 
- //   public enum RolEnum
- //   {
- //       ADMIN,
- //       USER
-	//}
-
-
 }
