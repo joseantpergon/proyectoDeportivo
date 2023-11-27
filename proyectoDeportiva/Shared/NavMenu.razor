@@ -1,8 +1,19 @@
-﻿<MudAppBar Elevation="4" Color="Color.Primary">
-    <MudToolbar>
+﻿<MudAppBar Elevation="4" Color="Color.Primary" Style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+    <div>
         <MudIconButton Icon="@Icons.Material.Filled.Menu" @onclick="ToggleNavMenu" />
-        <MudTypography Typo="Typo.h6">proyectoDeportiva</MudTypography>
-    </MudToolbar>
+    </div>
+    <div style="display: flex; align-items: center;">
+        
+        <MudTypography Typo="Typo.h6" Style="margin-left: 8px;">proyectoDeportiva</MudTypography>
+    </div>
+    <div style="display: flex; align-items: center;">
+        
+        <MudAvatar Rounded="true" Color="Color.Surface">
+            <MudIconButton Icon="@Icons.Material.Filled.Android" />
+        </MudAvatar>
+        Tu Perfil
+
+    </div>
 </MudAppBar>
 
 @code {
