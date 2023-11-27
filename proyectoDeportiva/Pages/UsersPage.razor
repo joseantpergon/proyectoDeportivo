@@ -1,16 +1,22 @@
 ﻿@page "/users"
 
-@using Microsoft.JSInterop
-@using System.Security.Cryptography
-@using System.Text
-@using proyectoDeportiva.Areas.Identity.Data
-@using proyectoDeportiva.Data
+@using Microsoft.AspNetCore.Identity;
+@using Microsoft.AspNetCore.Http;
 @using System.Text.RegularExpressions
 @using System.ComponentModel.DataAnnotations
+@using System.Drawing
+@using System.Globalization
+@using Color = MudBlazor.Color
+@using System.Collections.Immutable
+@using proyectoDeportiva.Areas.Identity.Data
+@using proyectoDeportiva.Data;
 
-@inject ApplicationDbContext _ApplicationDbContext
 
-@inject IJSRuntime JSRuntime
+@inject UserManager<User> _UserManager
+@inject AuthenticationStateProvider _auth
+@inject ApplicationDbContext _ApplicationDbContext;
+@inject IHttpContextAccessor _httpContextAccessor
+@inject IDialogService _dialogService;
 
 
 <MudGrid>
@@ -18,7 +24,7 @@
         <MudPaper>
             <h4>Crear nuevo usuario</h4>
             <p if="@errorMessage">@errorMessage</p>
-            <MudForm >
+            <MudForm @ref="form" >
 
                 <MudTextField Label="Nombre" @bind-Value="userName" Required Validation="@UserNameValidation" />
                  <MudTextField Label="Email" @bind-Value="userEmail" Required />
@@ -30,7 +36,7 @@
                 <MudTextField Label="DNI" @bind-Value="userDNI" Required="true" Validation="@DNIValidation" />
                 <MudDatePicker Label="Fecha de nacimiento" Editable="true" @bind-value="userFechaNacimiento" Mask="@(new DateMask("dd/MM/yyyy"))" DateFormat="dd/MM/yyyy" />
 
-                <MudButton OnClick="CreateUser" Style="margin: 20px" Color="Color.Dark" Variant="Variant.Filled">Crear Usuario</MudButton>
+                <MudButton OnClick="Submit" Style="margin: 20px" Color="Color.Dark" Variant="Variant.Filled">Crear Usuario</MudButton>
             </MudForm>
         </MudPaper>
     </MudItem>
@@ -183,60 +189,80 @@
         int remainder = numbers % 23;
         return validLetters[remainder];
     }
-    private string HashDNI(string dni)
+
+
+
+
+    private async void Submit()
     {
-        using (SHA256 sha256 = SHA256.Create())
+
+        if (form != null)
         {
-            byte[] hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(dni));
-            return Convert.ToBase64String(hashedBytes);
-        }
-    }
-    private void CreateUser()
-    {
-        if (
-            userName != null &&
-            userEmail != null &&
-            userPhone != null &&
-            userRole != null &&
-            userDNI != null &&
-            userFechaNacimiento != null 
-        )
-        {
-            errorMessage = "";
-            try
+            // Utiliza la validación del modelo para verificar los datos
+            await form.Validate();
+            var isValid = form.IsValid;
+
+            if (isValid)
             {
-                string dniWithoutLetter = userDNI.Substring(0, 8);
-                var hashedDNI = HashDNI(dniWithoutLetter);
-                var newUser = new User()
+                errorMessage = "";
+                var userNameCap = char.ToUpper(userName[0]) + userName.Substring(1).ToLower();
+                try
+                {
+                    // Normaliza el nombre de usuario y el correo electrónico
+                    var normalizedUserName = userName.ToUpper();
+                    var normalizedEmail = userEmail.ToUpper();
+                    var DNISinLetra = userDNI.Substring(0, 8);
+
+                    var password = DNISinLetra + "." + userNameCap;
+
+                    // Verifica si el correo electrónico ya existe en la base de datos
+                    var existingUser = await _UserManager.FindByEmailAsync(normalizedEmail);
+                    if (existingUser != null)
                     {
-                        UserName = userName,
-                        Email = userEmail,
-                        PhoneNumber = userPhone,
-                        Rol = userRole,
-                        DNI = userDNI,
-                        FechaNacimiento = userFechaNacimiento,
-                        PasswordHash = hashedDNI
+                        errorMessage = "El correo electrónico ya está registrado.";
+                        return;
+                    }
 
-                    };
-                // Save the new user to the database
-                // Make sure to set other properties like EmailConfirmed, LockoutEnabled, etc., as needed
-                _ApplicationDbContext.Users.Add(newUser);
-                _ApplicationDbContext.SaveChanges();
+                    // Crea un nuevo usuario
+                    var newUser = new User()
+                        {
+                            UserName = userName,
+                            NormalizedUserName = normalizedUserName,
 
+                            Email = userEmail,
+                            NormalizedEmail = normalizedEmail,
 
-                // Refresh the list of users
-                users = _ApplicationDbContext.Users.ToList();
+                            PhoneNumber = userPhone,
+                            Rol = userRole,
+                            DNI = userDNI,
+                            FechaNacimiento = userFechaNacimiento
+                        };
 
-            } catch (Exception e)
-            {
-                errorMessage = e.Message;
+                    // Usa el UserManager para crear el usuario y asignar la contraseña
+                    var result = await _UserManager.CreateAsync(newUser, password);
+
+                    // Si la creación del usuario no tiene éxito, muestra el mensaje de error
+                    if (!result.Succeeded)
+                    {
+                        errorMessage = "Error al crear el usuario: " + string.Join(", ", result.Errors.Select(error => error.Description));
+                    }
+
+                    // Actualizar la lista de usuarios independientemente de las advertencias
+                    await _ApplicationDbContext.SaveChangesAsync();
+                    users = _ApplicationDbContext.Users.ToList();
+                   
+                }
+                catch (Exception e)
+                {
+                    errorMessage = e.Message;
+                }
             }
-
+            else
+            {
+                errorMessage = "Rellene todos los campos";
+            }
         }
-        else
-        {
-            errorMessage = "Rellene todos los campos";
-        }
 
+        
     }
 }
