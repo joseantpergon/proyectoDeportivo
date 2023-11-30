@@ -1,0 +1,217 @@
+﻿@page "/listaUsuarios";
+
+@using Microsoft.AspNetCore.Identity;
+@using Microsoft.AspNetCore.Http;
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using System.Drawing
+@using System.Globalization
+@using Color = MudBlazor.Color
+@using System.Collections.Immutable
+@using proyectoDeportiva.Areas.Identity.Data
+@using proyectoDeportiva.Data;
+@*@using Microsoft.EntityFrameworkCore*@
+@attribute [Authorize]
+
+@inject UserManager<User> _UserManager
+@inject AuthenticationStateProvider _auth
+@inject ApplicationDbContext _ApplicationDbContext;
+@inject IHttpContextAccessor _httpContextAccessor
+@inject IDialogService _dialogService;
+@inject IJSRuntime _jSRuntime
+@inject NavigationManager _navigationManager
+
+
+<!-- Tabla Usuarios -->
+<MudDataGrid @ref="@_grid" Items="@FiltrarUser()"
+             Hover="true" ShowColumnOptions="false" ShowMenuIcon="false" Dense="true"
+             Hideable="true" CurrentPage="@_selectedPage" RowsPerPage="10">
+    <!-- Barra de Herramientas -->
+    <ToolBarContent>
+        <!-- Titulo -->
+        <MudText Typo="Typo.h6">Usuario</MudText>
+
+        <MudSpacer />
+        <MudSpacer />
+        <!-- Filtro -->
+        <MudTextField @bind-Value="_searchString" Margin="Margin.Dense"
+                      Placeholder="Buscar" Adornment="Adornment.Start" Immediate="true"
+                      AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0">
+        </MudTextField>
+    </ToolBarContent>
+    <!-- Columnas de la Tabla -->
+    <Columns>
+        <!-- Datos de la tabla Usuarios -->
+        <PropertyColumn T="User" TProperty="string" Property="x => x.UserName" Title="Nombre" />
+        <PropertyColumn T="User" TProperty="string" Property="x => x.Email" Title="Correo electronico" />
+        <PropertyColumn T="User" TProperty="string" Property="x => x.DNI" Title="DNI" />
+        <PropertyColumn T="User" TProperty="DateTime" Property="x => x.FechaNacimiento" Title="Fecha de naciemiento" Format="dd/MM/yyyy"/>
+        <PropertyColumn T="User" TProperty="string" Property="x => x.PhoneNumber" Title="Telefono" />
+        <PropertyColumn T="User" TProperty="string" Property="x => x.Rol" Title="Rol"/>
+        <!-- Botones con funciones -->
+        <TemplateColumn CellClass="d-flex justify-end" Sortable="false">
+            <CellTemplate>
+                <!-- Editar Usuario -->
+                <MudTooltip Text="Editar Usuarios">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@((e) => { EditUsersDialog(context.Item); })" />
+                </MudTooltip>
+                <!-- Eliminar Usuario -->
+                <MudTooltip Text="Eliminar">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Primary" OnClick="@((e) => { EliminarEstado(context.Item); })" />
+                </MudTooltip>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+
+
+    <!-- Paginacion -->
+    <PagerContent>
+        <MudPagination SelectedChanged="PageChanged" Count="@((_grid.GetFilteredItemsCount() + _grid.RowsPerPage - 1) / _grid.RowsPerPage)" Class="pa-4" />
+    </PagerContent>
+</MudDataGrid>
+
+
+<MudDialog @bind-IsVisible="@_uploadInProgress">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Align="Align.Center">Cargando Usuarios...</MudText>
+        <br />
+        <MudProgressLinear Value="@progress" Striped="true" Buffer="true" BufferValue="@progressBuffer" />
+        <br />
+        <MudText Align="Align.Center">@progressText</MudText>
+        </DialogContent>
+</MudDialog>
+
+@code {
+    Stack<User> navegacionUsers = new Stack<User>();
+    public bool activados = true;
+    private bool _uploadInProgress;
+    private double progress = 0;
+    private double progressBuffer = 0;
+    private string progressText = "";
+    string _searchString = "";
+    private MudDataGrid<User> _grid;
+    private int _selectedPage;
+    private List<User> ListaUser = new List<User>();
+    public User User { get; set; }
+
+    //Navegacion de la tabla Usuarios
+    private void PageChanged(int i)
+    {
+        _selectedPage = i - 1;
+        StateHasChanged();
+    }
+
+    void limpiarNavegacion()
+    {
+        navegacionUsers.Clear();
+        navegacionUsers.Push(User);
+        StateHasChanged();
+    }
+
+    void volverAtras()
+    {
+        navegacionUsers.Pop();
+        StateHasChanged();
+    }
+
+    private async Task VerUsers(User pro)
+    {
+        navegacionUsers.Push(_ApplicationDbContext.Users.FirstOrDefault(u => u.Id == pro.Id));
+        await CargarUser();
+        StateHasChanged();
+    }
+
+    //Lo que carga al principio
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        bool wait = true;
+        while (wait)
+        {
+            try
+            {
+                navegacionUsers.Push(User);
+                await CargarUser();
+                _selectedPage = 0;
+                wait = false;
+            }
+            catch (InvalidOperationException e)
+            {
+                await Task.Delay(100);
+            }
+        }
+    }
+
+    //Carga a los Usuarios
+    private async Task CargarUser()
+    {
+        try
+        {
+            //Crea una lista de los Usuarios
+            ListaUser = _ApplicationDbContext.Users.ToList();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar los usuarios: {ex.Message}");
+        }
+    }
+
+    //Filtro para los Usuarios
+    private List<User> FiltrarUser()
+    {
+        return ListaUser.FindAll(it =>
+        (it.UserName != null && it.UserName.ToUpper().Contains(_searchString.ToUpper())) ||
+        (it.Email.ToString().ToUpper().Contains(_searchString.ToUpper())) ||
+        (it.FechaNacimiento.ToString().ToUpper().Contains(_searchString.ToUpper())));
+    }
+
+    //Genera un Dialog para crear un usuario
+    private async void NewUsuarioDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true };
+        var dialog = await _dialogService.Show<Pages.UsersPage>("Nuevo Usuario", options).Result;
+
+        if (dialog.Data != null)
+        {
+            CargarUser();
+            StateHasChanged();
+        }
+
+    }
+
+    //Eliminar a un Usuario
+    private async void EliminarEstado(User Usr)
+    {
+
+        var result = await _dialogService.ShowMessageBox("Eliminar Usuario", "¿Estas seguro de que quieres eliminar al siguiente usuario?", "Si", "No");
+        Usr = _ApplicationDbContext.Users.FirstOrDefault(it => it.Id == Usr.Id);
+
+        if (result is true && Usr != null)
+        {
+
+            _ApplicationDbContext.Users.Remove(Usr);
+            await _ApplicationDbContext.SaveChangesAsync();
+
+        }
+
+        await CargarUser();
+        StateHasChanged();
+
+    }
+
+    private async Task EditUsersDialog(User Usr)
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, DisableBackdropClick = true, MaxWidth = MaxWidth.Medium };
+
+        var parameters = new DialogParameters();
+        parameters.Add("User", Usr);
+
+        var dialog = await _dialogService.Show<Pages.UsersPage>("Editar Usuario", parameters, options).Result;
+        if (dialog.Data != null)
+        {
+            await CargarUser();
+            StateHasChanged();
+        }
+    }
+}

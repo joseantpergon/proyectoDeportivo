@@ -1,0 +1,107 @@
+﻿@page "/admin"
+
+@using Microsoft.AspNetCore.Identity;
+@using Microsoft.AspNetCore.Http;
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using System.Drawing
+@using System.Globalization
+@using Color = MudBlazor.Color
+@using System.Collections.Immutable
+@using proyectoDeportiva.Areas.Identity.Data
+@using proyectoDeportiva.Data;
+@*@using Microsoft.EntityFrameworkCore*@
+@attribute [Authorize]
+
+@inject UserManager<User> _UserManager
+@inject AuthenticationStateProvider _auth
+@inject ApplicationDbContext _ApplicationDbContext;
+@inject IHttpContextAccessor _httpContextAccessor
+@inject IDialogService _dialogService;
+@inject IJSRuntime _jSRuntime
+@inject NavigationManager _navigationManager
+
+
+
+<!-- Navegación -->
+<MudTabs Elevation="2" Rounded="true" Centered="true">
+    <!-- Parte de los Usuarios -->
+    <MudTabPanel Icon="@Icons.Material.Filled.AccountCircle" BadgeData='"Usuarios"'>
+        <proyectoDeportiva.Components.ListUsers/>
+    </MudTabPanel>
+    <!-- Parte de las Pistas -->
+    <MudTabPanel Icon="@Icons.Material.Filled.SportsSoccer" BadgeData='"Pistas"'>
+        <proyectoDeportiva.Components.ListPistas/>
+    </MudTabPanel>
+    <!-- Parte de los Eventos -->
+    <MudTabPanel Icon="@Icons.Material.Filled.Event" BadgeData='"Reservas"'>
+        <proyectoDeportiva.Components.ListReservas/>
+    </MudTabPanel>
+</MudTabs>
+
+
+
+@*<!-- Tabla Usuarios -->
+<MudDataGrid @ref="@_grid" Items="@FiltrarUser()"
+             Hover="true" ShowColumnOptions="false" ShowMenuIcon="false" Dense="true"
+             Hideable="true" CurrentPage="@_selectedPage" RowsPerPage="15">
+    <!-- Barra de Herramientas -->
+    <ToolBarContent>
+        <!-- Titulo -->
+        <MudText Typo="Typo.h6">Usuario</MudText>
+
+        <MudSpacer />
+        <MudSpacer />
+        <!-- Filtro -->
+        <MudTextField @bind-Value="_searchString" Margin="Margin.Dense"
+                      Placeholder="Buscar" Adornment="Adornment.Start" Immediate="true"
+                      AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0">
+        </MudTextField>
+    </ToolBarContent>
+    <!-- Columnas de la Tabla -->
+    <Columns>
+        <!-- Datos de la tabla Usuarios -->
+        <PropertyColumn T="User" TProperty="string" Property="x => x.UserName" Title="Nombre" />
+        <PropertyColumn T="User" TProperty="string" Property="x => x.Email" Title="Correo electronico" />
+        <PropertyColumn T="User" TProperty="string" Property="x => x.DNI" Title="DNI" />
+        <PropertyColumn T="User" TProperty="DateTime" Property="x => x.FechaNacimiento" Title="Fecha de naciemiento" Format="dd/MM/yyyy"/>
+        <PropertyColumn T="User" TProperty="string" Property="x => x.PhoneNumber" Title="Telefono" />
+        <PropertyColumn T="User" TProperty="string" Property="x => x.Rol" Title="Rol"/>
+        <!-- Botones con funciones -->
+        <TemplateColumn CellClass="d-flex justify-end" Sortable="false">
+            <CellTemplate>
+                <!-- Editar Usuario -->
+                <MudTooltip Text="Editar Incidencia">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@((e) => { EditIncidenciaDialog(context.Item); })" />
+                </MudTooltip>
+                <!-- Eliminar Usuario -->
+                <MudTooltip Text="Eliminar">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Primary" OnClick="@((e) => { EliminarEstado(context.Item); })" />
+                </MudTooltip>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+
+
+    <!-- Paginacion -->
+    <PagerContent>
+        <MudPagination SelectedChanged="PageChanged" Count="@((_grid.GetFilteredItemsCount() + _grid.RowsPerPage - 1) / _grid.RowsPerPage)" Class="pa-4" />
+    </PagerContent>
+</MudDataGrid>
+
+
+<MudDialog @bind-IsVisible="@_uploadInProgress">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Align="Align.Center">Cargando Usuarios...</MudText>
+        <br />
+        <MudProgressLinear Value="@progress" Striped="true" Buffer="true" BufferValue="@progressBuffer" />
+        <br />
+        <MudText Align="Align.Center">@progressText</MudText>
+        </DialogContent>
+    </MudDialog>*@
+
+
+
+@code {
+
+}

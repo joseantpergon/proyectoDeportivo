@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Authorization
 @attribute [AllowAnonymous]
 @model proyectoDeportiva.Pages.LoginModel
-
+@using Color = MudBlazor.Color
 
 
 
@@ -33,48 +33,62 @@
 <!--===============================================================================================-->
 	<link rel="stylesheet" type="text/css" href="~/css/util.css">
 	<link rel="stylesheet" type="text/css" href="~/css/main.css">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 <!--===============================================================================================-->
 </head>
 <body>
 	
-	<div class="limiter">
-		<div class="container-login100">
-			<div class="wrap-login100">
+	<div class="container">
+		<div class="row vh-100 justify-content-center align-items-center">
+			<div class="col-6 bg-light p-5">
 				
-
+				<div class="d-flex justify-content-center">
+					<h2 style="color: #594ae2">Inicio Sesión</h2>
+				</div>
 				<form method="post" asp-page="/login" class="login100-form validate-form">
 					@Html.AntiForgeryToken()
-					<div class="wrap-input100 validate-input m-b-26" data-validate="El email debe de tener formato ejemplo@ejemplo.es">
-						<span class="label-input100">Email</span>
-						<input asp-for="Input.Email" class="input100" type="text" name="email" autocomplete="email" placeholder="Introduzca el correo electrónico">
-						<label asp-for="Input.Email" class="form-label"></label>
-						<span asp-validation-for="Input.Email" class="text-danger"></span>
-						<span class="focus-input100"></span>
-					</div>
+				<div class="form-group validate-input m-b-26" data-validate="El email debe tener formato ejemplo@ejemplo.es">
+                    <label for="email" class="label-input100">Email</label>
+                    <input asp-for="Input.Email" class="form-control input100" type="text" name="email" id="email" autocomplete="email" placeholder="Introduzca el correo electrónico">
+                </div>
 
-					<div class="wrap-input100 validate-input m-b-18" data-validate="La contraseña es obligatoria">
-						<span class="label-input100">Contraseña</span>
-						<input asp-for="Input.Password" class="input100" type="password" name="password" autocomplete="current-password" placeholder="Introduzca la contraseña">
-						<label asp-for="Input.Password" class="form-label"></label>
-						<span asp-validation-for="Input.Password" class="text-danger"></span>
-						<span class="focus-input100"></span>
-					</div>
+				<br/>
 
-					<div class="flex-sb-m w-full p-b-30">
+                <div class="form-group validate-input m-b-18" data-validate="La contraseña es obligatoria">
+                    <label for="password" class="label-input100">Contraseña</label>
+                    <input asp-for="Input.Password" class="form-control input100" type="password" name="password" id="password" autocomplete="current-password" placeholder="Introduzca la contraseña">                  
+                </div>
+				
+				@*@Html.ValidationMessageFor(model => model.Input.Email, "", new { @class = "text-danger" })
+				@Html.ValidationMessageFor(model => model.Input.Password, "", new { @class = "text-danger" })*@
+
+				<br/>
+
+				<div class = "text-danger">
+
+					@foreach (var entry in ViewData.ModelState.Values)
+						{
+							foreach (var error in entry.Errors)
+							{
+					<p>@error.ErrorMessage</p>
+							}
+						}
+				 </div>
+					<div class="d-flex justify-content-between align-items-center mb-3">
 						<div>
-							<a href="#" class="txt1">
+							<a href="#" class="text-primary">
 								¿Has olvidado la contraseña?
 							</a>
 						</div>
 					</div>
 
-					<div class="container-login100-form-btn">
-						<button class="login100-form-btn">
+					<div class="form-group">
+						<button type="submit" class="btn btn-primary btn-block" style="background-color: #594ae2; border-color: #594ae2">
 							Iniciar sesión
 						</button>
 					</div>
 				</form>
-				<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+				@*<div asp-validation-summary="ModelOnly" class="text-danger"></div>*@
 			</div>
 		</div>
 	</div>
@@ -95,6 +109,11 @@
 	<script src="~/vendor/countdowntime/countdowntime.js"></script>
 <!--===============================================================================================-->
 	<script src="~/js/main.js"></script>
+	<script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+	
+
 
 </body>
 </html>
