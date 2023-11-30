@@ -40,6 +40,10 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "dependencies": {
+            "BlazorInputFile": {
+              "target": "Package",
+              "version": "[0.2.0, )"
+            },
             "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": {
               "target": "Package",
               "version": "[7.0.14, )"
@@ -64,7 +68,7 @@
             },
             "MudBlazor": {
               "target": "Package",
-              "version": "[6.11.0, )"
+              "version": "[6.11.1, )"
             },
             "Pomelo.EntityFrameworkCore.MySql": {
               "target": "Package",

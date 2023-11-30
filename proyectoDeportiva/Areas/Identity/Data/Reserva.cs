@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using proyectoDeportiva.Data;
 
@@ -21,4 +22,6 @@ namespace proyectoDeportiva.Areas.Identity.Data
 		public Pista Pista { get; set; }
 
 	}
+
+    
 }

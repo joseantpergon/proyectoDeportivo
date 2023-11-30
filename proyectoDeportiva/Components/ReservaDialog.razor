@@ -7,6 +7,10 @@
 @inject ILogger<PistasPage> Logger
 @inject NavigationManager NavigationManager;
 @inject ApplicationDbContext _ApplicationDbContext;
+@inject AuthenticationStateProvider _authenticationStateProvider
+@inject NavigationManager _navigationManager
+@inject SignInManager<User> SingInManager
+@inject UserManager<User> _userManager
 
 <MudDialog>
     <DialogContent>
@@ -30,8 +34,23 @@
     [Parameter] public TimeSpan HoraReserva { get; set; }
     [Parameter] public Pista pista { get; set; }
 
+    private User currentUser;
 
+    protected override async Task OnInitializedAsync()
+    {
+        GetUser();
+    }
 
+    async private void GetUser()
+    {
+        var authenticationState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authenticationState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            currentUser = await _userManager.GetUserAsync(user);
+        }
+    }
     void Cancel() => MudDialog.Cancel();
 
     void Submit()
@@ -47,14 +66,13 @@
         try
         {
 
-            Console.WriteLine("HOLAAAAA");
             var nuevaReserva = new Reserva
                 {
                     FechaReserva = DateTime.Now,
                     DiaReserva = FechaReserva.Date, // Asigna solo la fecha sin la parte de la hora
                     HoraInicio = HoraReserva,
                     HoraFin = HoraReserva.Add(new TimeSpan(1, 0, 0)), // Añade 1 hora para obtener la hora de finalización
-                    Usuario = null, // Asigna el usuario actual
+                    Usuario = currentUser, // Asigna el usuario actual
                     Pista = pista // Asegúrate de que pista esté definida en tu componente
                 };
 
