@@ -49,7 +49,7 @@ namespace proyectoDeportiva.Pages
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
-            if (ModelState.IsValid)
+            if (ModelState.IsValid) 
             {
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true                
@@ -67,20 +67,6 @@ namespace proyectoDeportiva.Pages
                     {
                         await _signInManager.SignInAsync(usuario, false);
 
-                        //await _userManager.AddClaimAsync(usuario, new Claim("idEmpresa" as String, emp.ID.ToString()));
-                        //await _userManager.AddClaimAsync(usuario, new Claim("Empresa" as String, emp.Nombre.ToString()));
-                        //await _userManager.AddClaimAsync(usuario, new Claim("idUsuario" as String, usuario.Id.ToString()));
-                        //await _userManager.AddClaimAsync(usuario, new Claim("Usuario" as String, usuario.NombreCompleto.ToString()));
-                        //await _userManager.AddClaimAsync(usuario, new Claim("idPaisEmpresa" as String, emp.idPais.ToString()));
-                        //await _userManager.AddClaimAsync(usuario, new Claim("idPaisUsuario" as String, usuario.idPais.ToString()));
-                        //await _userManager.AddClaimAsync(usuario, new Claim("idZonaHoraria" as String, usuario.idZonaHoraria.ToString()));
-
-                        //HttpContext.Session.SetInt32("idEmpresa", emp.ID);
-                        //HttpContext.Session.SetString("Empresa", emp.Nombre);
-                        //HttpContext.Session.SetString("idUsuario", usuario.Id);
-                        //HttpContext.Session.SetInt32("idPaisEmpresa", emp.idPais);
-
-
                         _logger.LogInformation("User logged in.");
                         return LocalRedirect(returnUrl); 
                     }
@@ -96,39 +82,49 @@ namespace proyectoDeportiva.Pages
                         _logger.LogWarning("User account locked out.");
                         return RedirectToPage("./Lockout");
                     }
-                }
+                    else
+                    {
+						// Mensaje de error cuando falla la contraseña
+						ModelState.AddModelError("Input.Password", "El correo o la contraseña es erroneo");
+						return Page();
+					}
+				}
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Inicio de sesión fallido. Verifica tus credenciales.");
-                    return Page();
+
+					//Mensaje cuando se mete un correo equivocado
+					ModelState.AddModelError("Input.Email", "El correo o la contraseña es erroneo");
+					return Page();
                 }
 
             } else
-            { 
+            {
+				//Salta aqui si no se ha introducido uno de los campos obligatorios o el email no pasa la validacion
 
-            }
+				return Page();
+			}
 
-            return Page();
         }
 
 
         public class InputModel
         {
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
-            /// 
+			/// <summary>
+			///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
+			///     directly from your code. This API may change or be removed in future releases.
+			/// </summary>
+			/// 
 
-            [Required]
-            public string Email { get; set; }
+			[Required(ErrorMessage = "El campo Email es obligatorio.")]
+			[EmailAddress(ErrorMessage = "El email debe tener un formato válido.")]
+			public string Email { get; set; }
 
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
-            [Required]
-            [DataType(DataType.Password)]
+			/// <summary>
+			///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
+			///     directly from your code. This API may change or be removed in future releases.
+			/// </summary>
+			[Required(ErrorMessage = "El campo Contraseña es obligatorio.")]
+			[DataType(DataType.Password)]
             public string Password { get; set; }
 
             /*
