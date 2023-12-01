@@ -1,6 +1,4 @@
-﻿@page "/listaPistas";
-
-@using Microsoft.AspNetCore.Identity;
+﻿@using Microsoft.AspNetCore.Identity;
 @using Microsoft.AspNetCore.Http;
 @using System.Text.RegularExpressions
 @using System.ComponentModel.DataAnnotations
@@ -22,8 +20,8 @@
 @inject NavigationManager _navigationManager
 
 
-<!-- Tabla Usuarios -->
-<MudDataGrid @ref="@_grid" Items="@FiltrarUser()"
+<!-- Tabla Pistas -->
+<MudDataGrid @ref="@_grid" Items="@FiltrarPistas()"
              Hover="true" ShowColumnOptions="false" ShowMenuIcon="false" Dense="true"
              Hideable="true" CurrentPage="@_selectedPage" RowsPerPage="15">
     <!-- Barra de Herramientas -->
@@ -41,23 +39,23 @@
     </ToolBarContent>
     <!-- Columnas de la Tabla -->
     <Columns>
-        <!-- Datos de la tabla Usuarios -->
-        <PropertyColumn T="User" TProperty="string" Property="x => x.UserName" Title="Nombre" />
-        <PropertyColumn T="User" TProperty="string" Property="x => x.Email" Title="Correo electronico" />
-        <PropertyColumn T="User" TProperty="string" Property="x => x.DNI" Title="DNI" />
-        <PropertyColumn T="User" TProperty="DateTime" Property="x => x.FechaNacimiento" Title="Fecha de naciemiento" Format="dd/MM/yyyy"/>
-        <PropertyColumn T="User" TProperty="string" Property="x => x.PhoneNumber" Title="Telefono" />
-        <PropertyColumn T="User" TProperty="string" Property="x => x.Rol" Title="Rol"/>
+        <!-- Datos de la tabla Pistas -->
+        <PropertyColumn T="Pista" TProperty="string" Property="x => x.Nombre" Title="Nombre de la pista" />
+        <PropertyColumn T="Pista" TProperty="string" Property="x => x.Estado" Title="Estado" />
+        <PropertyColumn T="Pista" TProperty="string" Property="x => x.TipoDeporte" Title="Tipo de deporte" />
+        <PropertyColumn T="Pista" TProperty="TimeSpan" Property="x => x.HorarioApertura" Title="Hora de apertura" />
+        <PropertyColumn T="Pista" TProperty="TimeSpan" Property="x => x.HorarioCierre" Title="Hora de cierre" />
+        <PropertyColumn T="Pista" TProperty="int" Property="x => x.CapacidadMaxima.Value" Title="Capacidad máxima de jugadores"/>
         <!-- Botones con funciones -->
         <TemplateColumn CellClass="d-flex justify-end" Sortable="false">
             <CellTemplate>
-                <!-- Editar Usuario -->
-                <MudTooltip Text="Editar Usuarios">
+                <!-- Editar Pista -->
+                @*<MudTooltip Text="Editar Usuarios">
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@((e) => { EditUsersDialog(context.Item); })" />
-                </MudTooltip>
-                <!-- Eliminar Usuario -->
+                </MudTooltip>*@
+                <!-- Eliminar Pista -->
                 <MudTooltip Text="Eliminar">
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Primary" OnClick="@((e) => { EliminarEstado(context.Item); })" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Primary" OnClick="@((e) => { EliminarPista(context.Item); })" />
                 </MudTooltip>
             </CellTemplate>
         </TemplateColumn>
@@ -73,7 +71,7 @@
 
 <MudDialog @bind-IsVisible="@_uploadInProgress">
     <DialogContent>
-        <MudText Typo="Typo.h6" Align="Align.Center">Cargando Usuarios...</MudText>
+        <MudText Typo="Typo.h6" Align="Align.Center">Cargando Pistas...</MudText>
         <br />
         <MudProgressLinear Value="@progress" Striped="true" Buffer="true" BufferValue="@progressBuffer" />
         <br />
@@ -82,19 +80,19 @@
 </MudDialog>
 
 @code {
-    Stack<User> navegacionUsers = new Stack<User>();
+    Stack<Pista> navegacionPistas = new Stack<Pista>();
     public bool activados = true;
     private bool _uploadInProgress;
     private double progress = 0;
     private double progressBuffer = 0;
     private string progressText = "";
     string _searchString = "";
-    private MudDataGrid<User> _grid;
+    private MudDataGrid<Pista> _grid;
     private int _selectedPage;
-    private List<User> ListaUser = new List<User>();
-    public User User { get; set; }
+    private List<Pista> ListaPista = new List<Pista>();
+    public Pista pistas { get; set; }
 
-    //Navegacion de la tabla Usuarios
+    //Navegacion de la tabla Pistas
     private void PageChanged(int i)
     {
         _selectedPage = i - 1;
@@ -103,21 +101,21 @@
 
     void limpiarNavegacion()
     {
-        navegacionUsers.Clear();
-        navegacionUsers.Push(User);
+        navegacionPistas.Clear();
+        navegacionPistas.Push(pistas);
         StateHasChanged();
     }
 
     void volverAtras()
     {
-        navegacionUsers.Pop();
+        navegacionPistas.Pop();
         StateHasChanged();
     }
 
-    private async Task VerUsers(User pro)
+    private async Task VerPistas(Pista pts)
     {
-        navegacionUsers.Push(_ApplicationDbContext.Users.FirstOrDefault(u => u.Id == pro.Id));
-        await CargarUser();
+        navegacionPistas.Push(_ApplicationDbContext.Pistas.FirstOrDefault(u => u.Id == pts.Id));
+        await CargarPista();
         StateHasChanged();
     }
 
@@ -130,8 +128,8 @@
         {
             try
             {
-                navegacionUsers.Push(User);
-                await CargarUser();
+                navegacionPistas.Push(pistas);
+                await CargarPista();
                 _selectedPage = 0;
                 wait = false;
             }
@@ -142,13 +140,13 @@
         }
     }
 
-    //Carga a los Usuarios
-    private async Task CargarUser()
+    //Carga a las Pistas
+    private async Task CargarPista()
     {
         try
         {
-            //Crea una lista de los Usuarios
-            ListaUser = _ApplicationDbContext.Users.ToList();
+            //Crea una lista de las Pistas
+            ListaPista = _ApplicationDbContext.Pistas.ToList();
             StateHasChanged();
         }
         catch (Exception ex)
@@ -157,61 +155,61 @@
         }
     }
 
-    //Filtro para los Usuarios
-    private List<User> FiltrarUser()
+    //Filtro para las Pista
+    private List<Pista> FiltrarPistas()
     {
-        return ListaUser.FindAll(it =>
-        (it.UserName != null && it.UserName.ToUpper().Contains(_searchString.ToUpper())) ||
-        (it.Email.ToString().ToUpper().Contains(_searchString.ToUpper())) ||
-        (it.FechaNacimiento.ToString().ToUpper().Contains(_searchString.ToUpper())));
+        return ListaPista.FindAll(it =>
+        (it.Nombre != null && it.Nombre.ToUpper().Contains(_searchString.ToUpper())) ||
+        (it.TipoDeporte.ToString().ToUpper().Contains(_searchString.ToUpper())) ||
+        (it.Estado.ToString().ToUpper().Contains(_searchString.ToUpper())));
     }
 
-    //Genera un Dialog para crear un usuario
-    private async void NewUsuarioDialog()
-    {
-        var options = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true };
-        var dialog = await _dialogService.Show<Pages.UsersPage>("Nuevo Usuario", options).Result;
+    //Genera un Dialog para crear una Pista
+    //private async void NewUsuarioDialog()
+    //{
+    //    var options = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true };
+    //    var dialog = await _dialogService.Show<Pages.UsersPage>("Nuevo Usuario", options).Result;
 
-        if (dialog.Data != null)
-        {
-            CargarUser();
-            StateHasChanged();
-        }
+    //    if (dialog.Data != null)
+    //    {
+    //        CargarUser();
+    //        StateHasChanged();
+    //    }
 
-    }
+    //}
 
-    //Eliminar a un Usuario
-    private async void EliminarEstado(User Usr)
+    //Eliminar a una Pista
+    private async void EliminarPista(Pista pts)
     {
 
         var result = await _dialogService.ShowMessageBox("Eliminar Usuario", "¿Estas seguro de que quieres eliminar al siguiente usuario?", "Si", "No");
-        Usr = _ApplicationDbContext.Users.FirstOrDefault(it => it.Id == Usr.Id);
+        pts = _ApplicationDbContext.Pistas.FirstOrDefault(it => it.Id == pts.Id);
 
-        if (result is true && Usr != null)
+        if (result is true && pts != null)
         {
 
-            _ApplicationDbContext.Users.Remove(Usr);
+            _ApplicationDbContext.Pistas.Remove(pts);
             await _ApplicationDbContext.SaveChangesAsync();
 
         }
 
-        await CargarUser();
+        await CargarPista();
         StateHasChanged();
 
     }
 
-    private async Task EditUsersDialog(User Usr)
-    {
-        var options = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, DisableBackdropClick = true, MaxWidth = MaxWidth.Medium };
+    //private async Task EditPistaDialog(Pista pts)
+    //{
+    //    var options = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, DisableBackdropClick = true, MaxWidth = MaxWidth.Medium };
 
-        var parameters = new DialogParameters();
-        parameters.Add("User", Usr);
+    //    var parameters = new DialogParameters();
+    //    parameters.Add("User", pts);
 
-        var dialog = await _dialogService.Show<Pages.UsersPage>("Editar Usuario", parameters, options).Result;
-        if (dialog.Data != null)
-        {
-            await CargarUser();
-            StateHasChanged();
-        }
-    }
+    //    var dialog = await _dialogService.Show<Pages.UsersPage>("Editar Usuario", parameters, options).Result;
+    //    if (dialog.Data != null)
+    //    {
+    //        await CargarPista();
+    //        StateHasChanged();
+    //    }
+    //}
 }

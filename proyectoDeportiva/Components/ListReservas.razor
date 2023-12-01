@@ -1,5 +1,213 @@
-﻿<h3>ListReservas</h3>
+﻿@using Microsoft.AspNetCore.Identity;
+@using Microsoft.AspNetCore.Http;
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using System.Drawing
+@using System.Globalization
+@using Color = MudBlazor.Color
+@using System.Collections.Immutable
+@using proyectoDeportiva.Areas.Identity.Data
+@using proyectoDeportiva.Data;
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize]
+
+@inject UserManager<User> _UserManager
+@inject AuthenticationStateProvider _auth
+@inject ApplicationDbContext _ApplicationDbContext;
+@inject IHttpContextAccessor _httpContextAccessor
+@inject IDialogService _dialogService;
+@inject IJSRuntime _jSRuntime
+@inject NavigationManager _navigationManager
+
+
+<!-- Tabla Reservas -->
+<MudDataGrid @ref="@_grid" Items="@FiltrarReserva()"
+             Hover="true" ShowColumnOptions="false" ShowMenuIcon="false" Dense="true"
+             Hideable="true" CurrentPage="@_selectedPage" RowsPerPage="10">
+    <!-- Barra de Herramientas -->
+    <ToolBarContent>
+        <!-- Titulo -->
+        <MudText Typo="Typo.h6">Reservas</MudText>
+
+        <MudSpacer />
+        <MudSpacer />
+        <!-- Filtro -->
+        <MudTextField @bind-Value="_searchString" Margin="Margin.Dense"
+                      Placeholder="Buscar" Adornment="Adornment.Start" Immediate="true"
+                      AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0">
+        </MudTextField>
+    </ToolBarContent>
+    <!-- Columnas de la Tabla -->
+    <Columns>
+        <!-- Datos de la tabla Reservas -->
+        <PropertyColumn T="Reserva" TProperty="DateTime" Property="x => x.FechaReserva" Title="Fecha de la reserva" />
+        <PropertyColumn T="Reserva" TProperty="DateTime" Property="x => x.DiaReserva" Title="Dia de la reserva" Format="dd/MM/yyyy"/>
+        <PropertyColumn T="Reserva" TProperty="TimeSpan" Property="x => x.HoraInicio" Title="Hora de inicio" />
+        <PropertyColumn T="Reserva" TProperty="TimeSpan" Property="x => x.HoraFin" Title="Hora de finalización"/>
+        <PropertyColumn T="Reserva" TProperty="TimeSpan" Property="x => x.HoraFin" Title="Hora de finalización"/>
+        <PropertyColumn T="Reserva" TProperty="string" Property="x => x.Pista == null ? null : x.Pista.Nombre" Title="Pista reservada" />
+        <!-- Botones con funciones -->
+        <TemplateColumn CellClass="d-flex justify-end" Sortable="false">
+            <CellTemplate>
+                <!-- Editar Reserva -->
+                @*<MudTooltip Text="Editar Usuarios">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@((e) => { EditUsersDialog(context.Item); })" />
+                </MudTooltip>*@
+                <!-- Eliminar Reserva -->
+                <MudTooltip Text="Eliminar">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Primary" OnClick="@((e) => { EliminarReserva(context.Item); })" />
+                </MudTooltip>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+
+
+    <!-- Paginacion -->
+    <PagerContent>
+        <MudPagination SelectedChanged="PageChanged" Count="@((_grid.GetFilteredItemsCount() + _grid.RowsPerPage - 1) / _grid.RowsPerPage)" Class="pa-4" />
+    </PagerContent>
+</MudDataGrid>
+
+
+<MudDialog @bind-IsVisible="@_uploadInProgress">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Align="Align.Center">Cargando Usuarios...</MudText>
+        <br />
+        <MudProgressLinear Value="@progress" Striped="true" Buffer="true" BufferValue="@progressBuffer" />
+        <br />
+        <MudText Align="Align.Center">@progressText</MudText>
+        </DialogContent>
+</MudDialog>
 
 @code {
+    Stack<Reserva> navegacionReserva = new Stack<Reserva>();
+    public bool activados = true;
+    private bool _uploadInProgress;
+    private double progress = 0;
+    private double progressBuffer = 0;
+    private string progressText = "";
+    string _searchString = "";
+    private MudDataGrid<Reserva> _grid;
+    private int _selectedPage;
+    private List<Reserva> ListaReserva = new List<Reserva>();
+    public Reserva reserva { get; set; }
 
+    //Navegacion de la tabla Reserva
+    private void PageChanged(int i)
+    {
+        _selectedPage = i - 1;
+        StateHasChanged();
+    }
+
+    void limpiarNavegacion()
+    {
+        navegacionReserva.Clear();
+        navegacionReserva.Push(reserva);
+        StateHasChanged();
+    }
+
+    void volverAtras()
+    {
+        navegacionReserva.Pop();
+        StateHasChanged();
+    }
+
+    private async Task VerReservas(Reserva resv)
+    {
+        navegacionReserva.Push(_ApplicationDbContext.Reservas.FirstOrDefault(u => u.Id == resv.Id));
+        await CargarReserva();
+        StateHasChanged();
+    }
+
+    //Lo que carga al principio
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        bool wait = true;
+        while (wait)
+        {
+            try
+            {
+                navegacionReserva.Push(reserva);
+                await CargarReserva();
+                _selectedPage = 0;
+                wait = false;
+            }
+            catch (InvalidOperationException e)
+            {
+                await Task.Delay(100);
+            }
+        }
+    }
+
+    //Carga a los Usuarios
+    private async Task CargarReserva()
+    {
+        try
+        {
+            //Crea una lista de los Usuarios
+            ListaReserva = _ApplicationDbContext.Reservas.Include(it => it.Pista).Include(it => it.Usuario).ToList();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar las reservas: {ex.Message}");
+        }
+    }
+
+    //Filtro para las Reservas
+    private List<Reserva> FiltrarReserva()
+    {
+        return ListaReserva.FindAll(it =>
+        (it.FechaReserva.ToString().ToUpper().Contains(_searchString.ToUpper())));
+    }
+
+    //Genera un Dialog para crear una Reserva
+    //private async void NewUsuarioDialog()
+    //{
+    //    var options = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true };
+    //    var dialog = await _dialogService.Show<Pages.UsersPage>("Nueva Reserva", options).Result;
+
+    //    if (dialog.Data != null)
+    //    {
+    //        CargarReserva();
+    //        StateHasChanged();
+    //    }
+
+    //}
+
+    //Eliminar a una Reserva
+    private async void EliminarReserva(Reserva resv)
+    {
+
+        var result = await _dialogService.ShowMessageBox("Eliminar Reserva", "¿Estas seguro de que quieres eliminar la siguiente reserva?", "Si", "No");
+        resv = _ApplicationDbContext.Reservas.FirstOrDefault(it => it.Id == resv.Id);
+
+        if (result is true && resv != null)
+        {
+
+            _ApplicationDbContext.Reservas.Remove(resv);
+            await _ApplicationDbContext.SaveChangesAsync();
+
+        }
+
+        await CargarReserva();
+        StateHasChanged();
+
+    }
+
+    //private async Task EditUsersDialog(User Usr)
+    //{
+    //    var options = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, DisableBackdropClick = true, MaxWidth = MaxWidth.Medium };
+
+    //    var parameters = new DialogParameters();
+    //    parameters.Add("User", Usr);
+
+    //    var dialog = await _dialogService.Show<Pages.UsersPage>("Editar Usuario", parameters, options).Result;
+    //    if (dialog.Data != null)
+    //    {
+    //        await CargarReserva();
+    //        StateHasChanged();
+    //    }
+    //}
 }
