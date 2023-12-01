@@ -1,6 +1,4 @@
-﻿@page "/listaUsuarios";
-
-@using Microsoft.AspNetCore.Identity;
+﻿@using Microsoft.AspNetCore.Identity;
 @using Microsoft.AspNetCore.Http;
 @using System.Text.RegularExpressions
 @using System.ComponentModel.DataAnnotations
@@ -29,7 +27,7 @@
     <!-- Barra de Herramientas -->
     <ToolBarContent>
         <!-- Titulo -->
-        <MudText Typo="Typo.h6">Usuario</MudText>
+        <MudText Typo="Typo.h6">Usuarios</MudText>
 
         <MudSpacer />
         <MudSpacer />
@@ -57,7 +55,7 @@
                 </MudTooltip>
                 <!-- Eliminar Usuario -->
                 <MudTooltip Text="Eliminar">
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Primary" OnClick="@((e) => { EliminarEstado(context.Item); })" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Primary" OnClick="@((e) => { EliminarUsuario(context.Item); })" />
                 </MudTooltip>
             </CellTemplate>
         </TemplateColumn>
@@ -181,7 +179,7 @@
     }
 
     //Eliminar a un Usuario
-    private async void EliminarEstado(User Usr)
+    private async void EliminarUsuario(User Usr)
     {
 
         var result = await _dialogService.ShowMessageBox("Eliminar Usuario", "¿Estas seguro de que quieres eliminar al siguiente usuario?", "Si", "No");
