@@ -34,7 +34,7 @@
           
                             @foreach(var hora in horario)
                             {
-                                <MudButton Variant="Variant.Outlined" Color="Color.Info" OnClick="() => ActivarDialogoReserva(dia,hora)" Style="margin-bottom: 10px" Disabled="@IsReserved(hora,dia, pista)">
+                                <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="() => ActivarDialogoReserva(dia,hora)" Style="margin-bottom: 10px" Disabled="@IsReserved(hora,dia, pista)">
                                         @hora.ToString("hh\\:mm")
                                 </MudButton>
                             }

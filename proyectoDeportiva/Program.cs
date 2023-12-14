@@ -37,6 +37,7 @@ CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
+    options.AccessDeniedPath = "/denied";
     options.LoginPath = "/login";
     // ... otras opciones si las hay
 });
@@ -77,6 +78,8 @@ app.UseSession();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+
 
 app.MapControllers();
 app.MapBlazorHub();

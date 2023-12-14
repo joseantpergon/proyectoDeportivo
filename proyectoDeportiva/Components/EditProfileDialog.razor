@@ -1,0 +1,112 @@
+﻿@using proyectoDeportiva.Data
+@using proyectoDeportiva.Areas.Identity.Data
+@using Microsoft.EntityFrameworkCore;
+
+@inject ApplicationDbContext _ApplicationDbContext;
+@inject UserManager<User> _UserManager;
+@inject IDialogService _dialogService
+
+
+<MudDialogContent style="margin:20px; padding:10px">
+    <MudDivider />
+
+    
+    <AvatarImage Size="Size.Large"/>
+    <div>
+        <label for="image" class="">
+            Seleccionar imagen de perfil
+        </label>
+        <InputFile id="image" OnChange="OnFileChange" class="form-control"></InputFile>
+    </div>
+    <MudTextField Label="Nombre" @bind-Value="user.Name" />
+    <MudTextField Label="Apellidos" @bind-Value="user.Surname" />
+    <MudTextField Label="Email" @bind-Value="user.Email" />
+    <MudDatePicker Label="Fecha de nacimiento"
+                   Editable="true"
+                    @bind-Date="FechaNacimiento"
+                   Mask="@(new DateMask("dd/MM/yyyy"))"
+                   DateFormat="dd/MM/yyyy" />
+    <!-- Añade más campos según tus necesidades -->
+
+    <MudDialogActions>
+        <MudButton Style="margin:10px" OnClick="SaveChanges" Variant="Variant.Filled" Color="Color.Primary">Guardar Cambios</MudButton>
+        <MudButton Style="margin:10px" OnClick="Cancel" Variant="Variant.Filled" Color="Color.Secondary">Cancelar</MudButton>
+    </MudDialogActions>
+</MudDialogContent>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public User user { get; set; }
+
+    private byte[] profilePicture;
+
+
+    public DateTime? FechaNacimiento;
+
+    async Task OnFileChange(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        if (file != null)
+        {
+            // Lee el contenido del archivo en un array de bytes
+            using (var stream = file.OpenReadStream())
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await stream.CopyToAsync(memoryStream);
+                    profilePicture = memoryStream.ToArray();
+                }
+            }
+
+
+        }
+    }
+
+    IList<IBrowserFile> files = new List<IBrowserFile>();
+    private void UploadFiles(IBrowserFile file)
+    {
+        files.Add(file);
+    }
+    private byte[] GetDefaultAvatar()
+    {
+        // Aquí puedes proporcionar una imagen predeterminada para el avatar
+        // Puedes almacenarla como recurso en la aplicación o como un archivo y leer sus bytes aquí.
+        // Por ejemplo, si tienes una imagen predeterminada en wwwroot/images/default-avatar.jpg, puedes usar:
+        var defaultAvatarPath = Path.Combine("wwwroot", "images", "default-avatar.jpg");
+        var defaultAvatarBytes = File.ReadAllBytes(defaultAvatarPath);
+        return defaultAvatarBytes;
+    }
+
+
+
+
+    async private void SaveChanges()
+    {
+        var existingUser = await _ApplicationDbContext.Users.FindAsync(user.Id);
+
+        if (existingUser != null)
+        {
+            // Actualiza las propiedades con los valores del formulario
+            existingUser.Name = user.Name;
+            existingUser.Surname = user.Surname;
+            existingUser.Email = user.Email;
+            existingUser.FechaNacimiento = FechaNacimiento ?? DateTime.MinValue;
+            existingUser.ProfilePicture = profilePicture;
+
+            // Marca el usuario como modificado en el contexto
+            _ApplicationDbContext.Entry(existingUser).State = EntityState.Modified;
+
+            // Guarda los cambios en la base de datos
+            await _ApplicationDbContext.SaveChangesAsync();
+        }
+
+        MudDialog.Close();
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}
