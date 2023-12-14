@@ -7,9 +7,13 @@ namespace proyectoDeportiva.Areas.Identity.Data
 	public class User : IdentityUser
 	{
 		public DateTime FechaNacimiento { get; set; }
-		public string DNI { get; set; }
+        public DateTime FechaRegistro { get; set; }
+        public string DNI { get; set; }
 		public string Rol {  get; set; }
-	}
+        public byte[] ProfilePicture { get; set; }
+        public string Surname { get; set; }
+        public string Name { get; set; }
+    }
 
 	//public enum UserRole
 	//{

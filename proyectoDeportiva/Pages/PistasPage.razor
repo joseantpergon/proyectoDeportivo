@@ -1,4 +1,5 @@
 ﻿@page "/pistas"
+@using Microsoft.EntityFrameworkCore;
 @using proyectoDeportiva.Areas.Identity.Data
 @using proyectoDeportiva.Data
 @using MudBlazor
@@ -20,7 +21,7 @@
                     Estado:
                 </h3>
                 <p>
-                    @pista.Estado @if (pista.Estado == "DISPONIBLE")
+                    @pista.Estado.Nombre @if (pista.Estado.Nombre == "DISPONIBLE")
                     {
                         <MudIcon Icon="@Icons.Filled.CheckCircle" Color="Color.Success" />
                     }
@@ -38,8 +39,8 @@
     
 
 
-@* 
-    bool isPistaOcupada = pista.Estado == "OCUPADA";
+ 
+    bool isPistaOcupada = pista.Estado.Nombre == "OCUPADA";
    
     <MudExpansionPanels MultiExpansion="true" Style="max-width: 1000px; width: 80%">
 
@@ -50,7 +51,7 @@
                         Estado:
                     </h2>
                     <p>
-                        @pista.Estado @if (pista.Estado == "DISPONIBLE")
+                        @pista.Estado @if (pista.Estado.Nombre == "DISPONIBLE")
                         {
                             <MudIcon Icon="@Icons.Filled.CheckCircle" Color="Color.Success" />
                         } else {
@@ -87,85 +88,90 @@
             </MudCard>
         </MudExpansionPanel>
 
-    </MudExpansionPanels> *@
+    </MudExpansionPanels> 
 }
 
 @code {
     List<Reserva> reservas;
     List<Pista> pistas;
+    List<Estado> estados;
     bool isReservaDialogVisible = false;
     Pista pistaSeleccionada;
     DateTime horaInicio;
     DateTime horaFin;
     Dictionary<int, string> horaSeleccionada = new Dictionary<int, string>();
 
+    public Estado estado { get; set; }
     
 
-    // private List<TimeSpan> getHorario(Pista pista)
-    // {
-    //     List<TimeSpan> horario = new List<TimeSpan>();
+     private List<TimeSpan> getHorario(Pista pista)
+     {
+         List<TimeSpan> horario = new List<TimeSpan>();
 
-    //     // Verificar que tanto la apertura como el cierre tienen valores
-    //     if (pista.HorarioApertura != null && pista.HorarioCierre != null)
-    //     {
-    //         TimeSpan horaActual = pista.HorarioApertura;
+         // Verificar que tanto la apertura como el cierre tienen valores
+         if (pista.HorarioApertura != null && pista.HorarioCierre != null)
+         {
+             TimeSpan horaActual = pista.HorarioApertura;
 
-    //         // Agregar cada hora a la lista hasta llegar al cierre
-    //         while (horaActual <= pista.HorarioCierre)
-    //         {
-    //             horario.Add(horaActual);
-    //             horaActual = horaActual.Add(new TimeSpan(1, 0, 0)); // Sumar una hora
-    //         }
-    //     }
+             // Agregar cada hora a la lista hasta llegar al cierre
+             while (horaActual <= pista.HorarioCierre)
+             {
+                 horario.Add(horaActual);
+                 horaActual = horaActual.Add(new TimeSpan(1, 0, 0)); // Sumar una hora
+             }
+         }
 
-    //     return horario;
-    // }
+         return horario;
+     }
 
-    // private void createReserva(Pista pista)
-    // {
+     private void createReserva(Pista pista)
+     {
 
-    // }
+     }
 
-    // private void ReservarPistaConHora(Pista pista, string horaSeleccionadaString)
-    // {
-    //     // Implementa la lógica para crear una nueva reserva con la hora seleccionada y la pista
-    //     // Actualiza la base de datos y la lista de reservas si es necesario
-    //     // También puedes mostrar un mensaje de confirmación u otros elementos de IU según sea necesario
+     private void ReservarPistaConHora(Pista pista, string horaSeleccionadaString)
+     {
+         // Implementa la lógica para crear una nueva reserva con la hora seleccionada y la pista
+         // Actualiza la base de datos y la lista de reservas si es necesario
+         // También puedes mostrar un mensaje de confirmación u otros elementos de IU según sea necesario
 
-    //     if (TimeSpan.TryParseExact(horaSeleccionadaString, "hh\\:mm", CultureInfo.InvariantCulture, out var horaSeleccionadaTiempo))
-    //     {
-    //         // Crea la reserva con la hora seleccionada y la pista
-    //         Reserva nuevaReserva = new Reserva
-    //             {
-    //                 FechaReserva = DateTime.Now, // Puedes ajustar la fecha según tus necesidades
-    //                 HoraInicio = horaSeleccionadaTiempo,
-    //                 HoraFin = horaSeleccionadaTiempo.Add(new TimeSpan(1, 0, 0)), // Por ejemplo, la reserva dura una hora
-    //                 Usuario = null,// Ajusta esto según cómo manejas los usuarios
-    //                 Pista = pista
-    //             };
+         if (TimeSpan.TryParseExact(horaSeleccionadaString, "hh\\:mm", CultureInfo.InvariantCulture, out var horaSeleccionadaTiempo))
+         {
+             // Crea la reserva con la hora seleccionada y la pista
+             Reserva nuevaReserva = new Reserva
+                 {
+                     FechaReserva = DateTime.Now, // Puedes ajustar la fecha según tus necesidades
+                     HoraInicio = horaSeleccionadaTiempo,
+                     HoraFin = horaSeleccionadaTiempo.Add(new TimeSpan(1, 0, 0)), // Por ejemplo, la reserva dura una hora
+                     Usuario = null,// Ajusta esto según cómo manejas los usuarios
+                     Pista = pista
+                 };
 
-    //         // Agrega la reserva a la base de datos y actualiza la lista de reservas
-    //         _ApplicationDbContext.Reservas.Add(nuevaReserva);
-    //         _ApplicationDbContext.SaveChanges();
+             // Agrega la reserva a la base de datos y actualiza la lista de reservas
+             _ApplicationDbContext.Reservas.Add(nuevaReserva);
+             _ApplicationDbContext.SaveChanges();
 
-    //         // Otras acciones según sea necesario, como cerrar el diálogo de reserva
-    //         isReservaDialogVisible = false;
-    //     }
-    //     else
-    //     {
-    //         // Manejar el caso en que la conversión de la hora falle
-    //     }
-    // }
+             // Otras acciones según sea necesario, como cerrar el diálogo de reserva
+             isReservaDialogVisible = false;
+         }
+         else
+         {
+             // Manejar el caso en que la conversión de la hora falle
+         }
+     }
 
     protected override void OnInitialized()
     {
         reservas = _ApplicationDbContext.Reservas.ToList();
-        pistas = _ApplicationDbContext.Pistas.ToList();
+        pistas = _ApplicationDbContext.Pistas.Include(it => it.Estado).Include(it => it.TipoDeporte).ToList();
+        estados = _ApplicationDbContext.Estados.ToList();
         foreach (var pista in pistas)
         {
             horaSeleccionada[pista.Id] = pista.HorarioApertura.ToString("hh\\:mm") ?? string.Empty;
         }
     }
 
+
     
 }
+

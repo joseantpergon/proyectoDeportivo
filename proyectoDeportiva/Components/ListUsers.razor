@@ -31,6 +31,8 @@
 
         <MudSpacer />
         <MudSpacer />
+         <!-- Boton Crear Pistas -->
+        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Style="margin-top: 10px; margin-right: 5px;" @onclick="crearUsuario">Crear nueva pista</MudButton>
         <!-- Filtro -->
         <MudTextField @bind-Value="_searchString" Margin="Margin.Dense"
                       Placeholder="Buscar" Adornment="Adornment.Start" Immediate="true"
@@ -165,10 +167,10 @@
     }
 
     //Genera un Dialog para crear un usuario
-    private async void NewUsuarioDialog()
+    private async void crearUsuario()
     {
         var options = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true };
-        var dialog = await _dialogService.Show<Pages.UsersPage>("Nuevo Usuario", options).Result;
+        var dialog = await _dialogService.Show<Pages.UsersPage>("Crear Nuevo Usuario", options).Result;
 
         if (dialog.Data != null)
         {
@@ -205,7 +207,7 @@
         var parameters = new DialogParameters();
         parameters.Add("User", Usr);
 
-        var dialog = await _dialogService.Show<Pages.UsersPage>("Editar Usuario", parameters, options).Result;
+        var dialog = await _dialogService.Show<NewUserDialog>("Editar Usuario", parameters, options).Result;
         if (dialog.Data != null)
         {
             await CargarUser();
