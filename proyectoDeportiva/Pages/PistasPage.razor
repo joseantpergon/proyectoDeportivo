@@ -2,6 +2,7 @@
 @using Microsoft.EntityFrameworkCore;
 @using proyectoDeportiva.Areas.Identity.Data
 @using proyectoDeportiva.Data
+@using proyectoDeportiva.Components
 @using MudBlazor
 @using System.Globalization
 
@@ -9,10 +10,9 @@
 
 @inject ApplicationDbContext _ApplicationDbContext
 
-<h3>Pistas</h3>
-
-@foreach (var pista in pistas)
+@if (pistas != null && pistas.Any())
 {
+
     
         <MudCard>
             <MudCardContent>
@@ -81,16 +81,18 @@
                         </MudSelect>
                         <MudButton OnClick="@(() => ReservarPistaConHora(pista, horaSeleccionada[pista.Id]))">Reservar</MudButton>
                     </div>
+
                     
-                </MudCardContent>
+                }
+
 
 
             </MudCard>
         </MudExpansionPanel>
 
     </MudExpansionPanels> 
-}
 
+}
 @code {
     List<Reserva> reservas;
     List<Pista> pistas;
@@ -100,6 +102,7 @@
     DateTime horaInicio;
     DateTime horaFin;
     Dictionary<int, string> horaSeleccionada = new Dictionary<int, string>();
+
 
     public Estado estado { get; set; }
     
@@ -166,8 +169,22 @@
         pistas = _ApplicationDbContext.Pistas.Include(it => it.Estado).Include(it => it.TipoDeporte).ToList();
         estados = _ApplicationDbContext.Estados.ToList();
         foreach (var pista in pistas)
+
         {
-            horaSeleccionada[pista.Id] = pista.HorarioApertura.ToString("hh\\:mm") ?? string.Empty;
+            try
+            {
+                reservas = _ApplicationDbContext.Reservas.ToList();
+                pistas = _ApplicationDbContext.Pistas.ToList();
+                foreach (var pista in pistas)
+                {
+                    horaSeleccionada[pista.Id] = pista.HorarioApertura.ToString("hh\\:mm") ?? string.Empty;
+                }
+                bucle = false;
+            }catch(InvalidOperationException e)
+            {
+                await Task.Delay(100);
+            }
+
         }
     }
 

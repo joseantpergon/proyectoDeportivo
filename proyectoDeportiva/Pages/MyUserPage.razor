@@ -1,0 +1,136 @@
+﻿@page "/profile"
+
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Http
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using System.Drawing
+@using Color = MudBlazor.Color
+@using System.Globalization
+@using System.Collections.Immutable
+@using proyectoDeportiva.Areas.Identity.Data
+@using proyectoDeportiva.Components;
+
+@inject AuthenticationStateProvider _authenticationStateProvider
+@inject NavigationManager _navigationManager
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> _userManager
+@inject IDialogService _dialogService
+
+
+
+
+@if (currentUser != null)
+{
+    <MudCard Style="max-width: 1000px;width: 80%; margin: auto;margin-top:20px;padding:15px;border:2px dotted; box-shadow:none" >
+        <h3>Tu Perfil</h3>
+
+        <MudCardHeader>
+
+            <AvatarImage Rounded="true" Size="MudBlazor.Size.Large" Style="width:100px;height:100px" IconSize="MudBlazor.Size.Large"  />
+            <MudText Typo="@Typo.h6" Style="margin:10px" >@currentUser.UserName</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+                <MudText>Nombre: @currentUser.Name</MudText>
+                <MudText>Apellidos: @currentUser.Surname</MudText>
+            <MudText>Numero de teléfono: @FormatearNumeroTelefono(currentUser.PhoneNumber)</MudText>
+            <MudText>DNI: @currentUser.DNI </MudText>
+                <MudText Typo="@Typo.subtitle2">Email: @currentUser.Email</MudText>
+
+        </MudCardContent>
+            <MudCardActions Style="display:flex; justify-content:space-around">
+            <MudButton OnClick="ShowEditProfileDialog" Variant="Variant.Filled" Color="Color.Primary">Editar Perfil</MudButton>
+            <MudButton OnClick="ShowPasswordChangeDialog" Variant="Variant.Filled" Color="Color.Primary">Cambiar contraseña</MudButton>
+
+            <MudButton >
+                <form method="post" action="Identity/Account/Logout">
+                    <button type="submit" class="btn btn-danger">Cerrar sesión</button>
+                </form>
+            </MudButton>
+        </MudCardActions>
+</MudCard>
+    
+    
+
+}
+@code {
+    private User currentUser;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var bucle = true;
+        while (bucle)
+        {
+            try
+            {
+                var authenticationState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+                var user = authenticationState.User;
+
+                if (user.Identity.IsAuthenticated)
+                {
+                    currentUser = await _userManager.GetUserAsync(user);
+                }
+
+                bucle = false;
+            }
+            catch(InvalidOperationException e)
+            {
+                await Task.Delay(100);
+            }
+        }
+
+
+
+    }
+
+    private string FormatearNumeroTelefono(string numeroTelefono)
+    {
+        // Puedes ajustar la cultura según tus necesidades
+        var cultura = new System.Globalization.CultureInfo("es-ES");
+
+        // Elimina cualquier carácter que no sea un dígito
+        var numeros = new string(numeroTelefono.Where(char.IsDigit).ToArray());
+
+        // Aplica el formato deseado
+        return !string.IsNullOrEmpty(numeros)
+            ? string.Format(cultura, "+{0:34 ### ### ###}", long.Parse(numeros))
+            : string.Empty;
+    }
+
+    private async void ShowEditProfileDialog()
+    {
+        var parameters = new DialogParameters
+        {
+            { "user", currentUser }
+        };
+
+        var dialog = _dialogService.Show<EditProfileDialog>("Editar Perfil", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            // Actualiza el perfil en la base de datos según sea necesario
+
+
+            // ...
+        }
+    }
+
+    private async void ShowPasswordChangeDialog()
+    {
+        var parameters = new DialogParameters
+        {
+            { "user", currentUser}
+        };
+        var dialog = _dialogService.Show<PasswordChangeDialog>("Cambia tu contraseña", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            
+        }
+    }
+
+    
+}

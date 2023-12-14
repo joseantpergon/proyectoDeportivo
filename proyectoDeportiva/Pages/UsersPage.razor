@@ -50,6 +50,7 @@
 </MudDialog>
 
 
+
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
     [Parameter] public User User { get; set; }
@@ -94,6 +95,7 @@
         {
             try
             {
+
                 
 
                 users = _ApplicationDbContext.Users.ToList();
@@ -102,6 +104,7 @@
             catch (InvalidOperationException e)
             {
                 await Task.Delay(100);
+
             }
         }
 
@@ -110,6 +113,7 @@
     //Validaciones
 
     private string NameValidation(string name)
+
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -126,6 +130,7 @@
         if (string.IsNullOrWhiteSpace(surname))
         {
             return "¡Los apellidos son obligatorios!";
+
         }
 
         // Puedes agregar otras validaciones según tus necesidades
@@ -133,12 +138,14 @@
         return null;
     }
 
+
     private string EmailValidation(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
         {
             return "¡El correo electrónico es obligatorio!";
         }
+
 
         // Verificar que el correo electrónico tiene un formato válido
         if (!IsValidEmail(email))
@@ -215,6 +222,7 @@
     {
         var generatedUsername = "";
 
+
         // generatedUsername += char.ToUpper(name[0]);
 
         var nameParts = name.Split(' ');
@@ -222,6 +230,7 @@
         {
             generatedUsername += char.ToUpper(namePart[0]);
         }
+
 
         var surnameParts = surname.Split(' ');
 
@@ -278,7 +287,9 @@
                     var newUser = new User()
                         {
                             Name = userName,
+
                             Surname = userSurname,
+
 
                             UserName = userUserName,
                             NormalizedUserName = normalizedUserName,
@@ -287,7 +298,9 @@
                             NormalizedEmail = normalizedEmail,
 
                             PhoneNumber = userPhone,
+
                             Rol = RoleUser,
+
                             DNI = userDNI.ToUpper(),
                             FechaNacimiento = userFechaNacimiento ?? DateTime.MinValue,
                             FechaRegistro = userFechaRegistro,
