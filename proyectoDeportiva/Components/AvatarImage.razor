@@ -1,0 +1,71 @@
+﻿
+@using proyectoDeportiva.Areas.Identity.Data
+@using proyectoDeportiva.Components;
+
+@inject AuthenticationStateProvider _authenticationStateProvider
+@inject UserManager<User> _userManager
+
+
+<MudAvatar Color="@Color" Size="@Size" Rounded="@Rounded" Square="@Square" Style="@Style">
+    @if (currentUser != null)
+    {
+
+        @if ($"{Convert.ToBase64String(currentUser.ProfilePicture)}" == "")
+        {
+            <MudIcon Style="@IconStyle" Icon="@Icons.Material.Filled.Person" Size="@IconSize" />
+        }
+        else
+        {
+            <MudImage Style="@ImgStyle" Src="@($"data:image/png;base64,{Convert.ToBase64String(currentUser.ProfilePicture)}")" alt="Avatar" />
+        }
+
+    }
+    
+</MudAvatar>
+@code {
+
+    private User currentUser;
+
+    [Parameter]
+	public Size Size { get; set; }
+
+    [Parameter]
+    public Size IconSize { get; set; }
+
+    [Parameter]
+    public Color Color { get; set; }
+
+    [Parameter]
+    public Variant Variant { get; set; }
+
+    [Parameter]
+	public string Style  { get; set; }
+
+    [Parameter]
+    public string ImgStyle { get; set; }
+
+    [Parameter]
+    public string IconStyle { get; set; }
+
+    [Parameter]
+    public bool Rounded { get; set; }
+
+    [Parameter]
+    public bool Square { get; set; }
+
+   
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authenticationState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            currentUser = await _userManager.GetUserAsync(user);
+        }
+    }
+
+}
+

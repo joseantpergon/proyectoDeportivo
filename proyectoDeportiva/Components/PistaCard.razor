@@ -1,0 +1,30 @@
+﻿@using proyectoDeportiva.Areas.Identity.Data
+@using proyectoDeportiva.Data
+@using proyectoDeportiva.Components
+
+<MudCard Style="padding:10px;max-width:250px;width:90%;margin:20px">
+    <MudCardContent>
+        <h2 class="mb-2">@Pista.Nombre</h2>
+        <p>
+            <strong>Estado:</strong>
+            @Pista.Estado
+            @if (Pista.Estado == "DISPONIBLE")
+            {
+                <MudIcon Icon="@Icons.Filled.CheckCircle" Color="Color.Success" Class="ml-1" />
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Filled.DoDisturbOn" Color="Color.Secondary" Class="ml-1" />
+            }
+        </p>
+    </MudCardContent>
+    <MudCardActions>
+        <MudLink Href="@($"/pistas/{Pista.Id}")" Class="mt-2">
+            Ver Detalles
+        </MudLink>
+    </MudCardActions>
+</MudCard>
+@code {
+    [Parameter]
+    public Pista Pista { get; set; }
+}
