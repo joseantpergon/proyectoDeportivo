@@ -11,87 +11,70 @@
 @using proyectoDeportiva.Areas.Identity.Data
 @using proyectoDeportiva.Data;
 
-
 @inject UserManager<User> _UserManager
+@inject AuthenticationStateProvider _authenticationStateProvider
 @inject AuthenticationStateProvider _auth
+@inject NavigationManager _navigationManager
 @inject ApplicationDbContext _ApplicationDbContext;
 @inject IHttpContextAccessor _httpContextAccessor
 @inject IDialogService _dialogService;
 
+<MudTabs  Outlined="true">
+    <MudTabPanel Text="Usuarios" Icon="@Icons.Material.Filled.Person" >
+        <MudGrid>
+            <MudItem xs="12" md="12">
+                <MudPaper Style="margin:auto; padding:15px" MaxWidth="1000px" Width="80%">
+                    <h4>Crear nuevo usuario</h4>
+                    <MudText Style="color:red" if="@errorMessage">@errorMessage</MudText>
+                    <MudForm @ref="form">
 
-<MudGrid>
-    <MudItem xs="12" md="6">
-        <MudPaper>
-            <h4>Crear nuevo usuario</h4>
-            <p if="@errorMessage">@errorMessage</p>
-            <MudForm @ref="form" >
+                        <MudTextField @bind-Value="userName" Label="Nombre" Required Validation="@NameValidation" />
+                         <MudTextField @bind-Value="userSurname" Label="Apellidos" Required Validation="@SurnameValidation" />
+                         <MudTextField Label="Email" @bind-Value="userEmail" Required Validation="@EmailValidation" />
+                         <MudTextField Label="Número de Teléfono" @bind-Value="userPhone" Required Validation="@PhoneValidation" />
+                         <MudSelect Label="Rol" @bind-Value="userRole" Required>
+                            <MudSelectItem Value="RoleUser">Usuario</MudSelectItem>
+                            <MudSelectItem Value="RoleAdmin">Administrador</MudSelectItem>
+                        </MudSelect>
+                        <MudTextField Label="DNI" @bind-Value="userDNI" Required="true" Validation="@DNIValidation" />
+                        <MudDatePicker Label="Fecha de nacimiento" Editable="true" @bind-Date="userFechaNacimiento" Mask="@(new DateMask("dd/MM/yyyy"))" DateFormat="dd/MM/yyyy" />
 
-                <MudTextField Label="Nombre" @bind-Value="userName" Required Validation="@UserNameValidation" />
-                 <MudTextField Label="Email" @bind-Value="userEmail" Required />
-                 <MudTextField Label="Número de Teléfono" @bind-Value="userPhone" Required Validation="@PhoneValidation" />
-                 <MudSelect Label="Rol" @bind-Value="userRole" Required>
-                    <MudSelectItem Value="RoleUser">Usuario</MudSelectItem>
-                    <MudSelectItem Value="RoleAdmin">Administrador</MudSelectItem>
-                </MudSelect>
-                <MudTextField Label="DNI" @bind-Value="userDNI" Required="true" Validation="@DNIValidation" />
-                <MudDatePicker Label="Fecha de nacimiento" Editable="true" @bind-value="userFechaNacimiento" Mask="@(new DateMask("dd/MM/yyyy"))" DateFormat="dd/MM/yyyy" />
 
-                <MudButton OnClick="Submit" Style="margin: 20px" Color="Color.Dark" Variant="Variant.Filled">Crear Usuario</MudButton>
-            </MudForm>
-        </MudPaper>
-    </MudItem>
- 
-    <MudItem xs="12" md="6">
-        <MudTextField @bind-Value="searchTerm" Label="Buscar usuario" Outlined Icon="@Icons.Material.Filled.Search" Class="mb-4" />
+                        <MudButton OnClick="Submit" Style="margin: 20px" Color="Color.Dark" Variant="Variant.Filled">Crear Usuario</MudButton>
+                    </MudForm>
 
-        <MudPaper>
+                </MudPaper>
+                </MudItem>
+        </MudGrid>
+    </MudTabPanel>
+</MudTabs>
 
-            @foreach (var user in filteredUsers)
-            {
-                <MudCard Class="mb-4">
-                    <MudCardContent>
-                        <h2 class="mb-2">
-                            <strong>@user.UserName</strong>
-                        </h2>
-                        <p class="mb-2">
-                            <strong>Email:</strong> @user.Email
-                        </p>
-                        <p class="mb-2">
-                            <strong>Teléfono:</strong> @user.PhoneNumber
-                        </p>
-                        <p class="mb-2">
-                            <strong>Rol:</strong> @user.Rol
-                        </p>
-                        <p class="mb-2">
-                            <strong>DNI:</strong> @user.DNI
-                        </p>
-                        <p class="mb-2">
-                            <strong>Fecha de Nacimiento:</strong> @user.FechaNacimiento.ToString("dd/MM/yyyy")
-                        </p>
-                    </MudCardContent>
-                </MudCard>
-            }
-        </MudPaper>
-       
-    </MudItem>
-</MudGrid>
+
+
 
 @code {
+
     private string searchTerm = "";
     private List<User> users = new List<User>();
     private List<User> filteredUsers => users.Where(u => u.UserName.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
 
-
     private string userName;
+    private string userSurname;
+    private string userUserName;
+
     private string userEmail;
     private string userPhone;
     private string userRole;
     private string userDNI;
-    private DateTime userFechaNacimiento;
+    private DateTime? userFechaNacimiento;
+    private DateTime userFechaRegistro;
+
 
     MudForm form;
 
 
+    private string error;
+    private string errorData;
     private string errorMessage;
 
 
@@ -100,12 +83,24 @@
     private string RoleUser = "USER";
 
 
-
-
-    protected override void OnInitialized()
+    protected override async void OnInitialized()
     {
+        bool bucle = true;
+        while (bucle)
+        {
+            try
+            {
+                
 
-        users = _ApplicationDbContext.Users.ToList();
+                users = _ApplicationDbContext.Users.ToList();
+                bucle = false;
+            }
+            catch (InvalidOperationException e)
+            {
+                await Task.Delay(100);
+            }
+        }
+
     }
 
 
@@ -120,26 +115,57 @@
         return users.Where(u => u.UserName.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
     }
 
-    private string UserNameValidation(string userName)
+    private string NameValidation(string name)
     {
-        if (string.IsNullOrWhiteSpace(userName))
+        if (string.IsNullOrWhiteSpace(name))
         {
-            return "¡El nombre de usuario es obligatorio!";
+            return "¡El nombre es obligatorio!";
         }
 
-        // Verificar que el nombre de usuario tiene entre 3 y 20 caracteres
-        if (userName.Length < 3 || userName.Length > 20)
+        // Puedes agregar otras validaciones según tus necesidades
+
+        return null;
+    }
+
+    private string SurnameValidation(string surname)
+    {
+        if (string.IsNullOrWhiteSpace(surname))
         {
-            return "El nombre de usuario debe tener entre 3 y 20 caracteres.";
+            return "¡Los apellidos son obligatorios!";
         }
 
-        // Verificar que el nombre de usuario solo contiene letras, números y guiones bajos
-        if (!Regex.IsMatch(userName, @"^[a-zA-Z0-9_]+$"))
+        // Puedes agregar otras validaciones según tus necesidades
+
+        return null;
+    }
+
+    private string EmailValidation(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
         {
-            return "El nombre de usuario solo puede contener letras, números y guiones bajos.";
+            return "¡El correo electrónico es obligatorio!";
+        }
+
+        // Verificar que el correo electrónico tiene un formato válido
+        if (!IsValidEmail(email))
+        {
+            return "El formato del correo electrónico no es válido.";
         }
 
         return null;
+    }
+
+    private bool IsValidEmail(string email)
+    {
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private string PhoneValidation(string phoneNumber)
@@ -191,7 +217,27 @@
     }
 
 
+    public string GenerateUsername(string name, string surname)
+    {
+        var generatedUsername = "";
 
+        // generatedUsername += char.ToUpper(name[0]);
+
+        var nameParts = name.Split(' ');
+        foreach (var namePart in nameParts)
+        {
+            generatedUsername += char.ToUpper(namePart[0]);
+        }
+
+        var surnameParts = surname.Split(' ');
+
+        foreach (var part in surnameParts)
+        {
+            generatedUsername += part.ToLower();
+        }
+
+        return generatedUsername;
+    }
 
     private async void Submit()
     {
@@ -205,15 +251,18 @@
             if (isValid)
             {
                 errorMessage = "";
-                var userNameCap = char.ToUpper(userName[0]) + userName.Substring(1).ToLower();
+
                 try
                 {
-                    // Normaliza el nombre de usuario y el correo electrónico
+                    userUserName = GenerateUsername(userName, userSurname);
+                    var userUserNameCap = char.ToUpper(userUserName[0]) + userUserName.Substring(1).ToLower();
+
+                    // Normaliza el nombre de usuario y el correo 
                     var normalizedUserName = userName.ToUpper();
                     var normalizedEmail = userEmail.ToUpper();
                     var DNISinLetra = userDNI.Substring(0, 8);
 
-                    var password = DNISinLetra + "." + userNameCap;
+                    var password = DNISinLetra + "." + userUserNameCap;
 
                     // Verifica si el correo electrónico ya existe en la base de datos
                     var existingUser = await _UserManager.FindByEmailAsync(normalizedEmail);
@@ -223,19 +272,26 @@
                         return;
                     }
 
+                    userFechaRegistro = DateTime.Now;
+
                     // Crea un nuevo usuario
                     var newUser = new User()
                         {
-                            UserName = userName,
+                            Name = userName,
+                            Surname = userSurname,
+
+                            UserName = userUserName,
                             NormalizedUserName = normalizedUserName,
 
                             Email = userEmail,
                             NormalizedEmail = normalizedEmail,
 
                             PhoneNumber = userPhone,
-                            Rol = userRole,
-                            DNI = userDNI,
-                            FechaNacimiento = userFechaNacimiento
+                            Rol = RoleUser,
+                            DNI = userDNI.ToUpper(),
+                            FechaNacimiento = userFechaNacimiento ?? DateTime.MinValue,
+                            FechaRegistro = userFechaRegistro,
+                            ProfilePicture = new byte[0],
                         };
 
                     // Usa el UserManager para crear el usuario y asignar la contraseña
@@ -250,11 +306,13 @@
                     // Actualizar la lista de usuarios independientemente de las advertencias
                     await _ApplicationDbContext.SaveChangesAsync();
                     users = _ApplicationDbContext.Users.ToList();
-                   
+
                 }
                 catch (Exception e)
                 {
                     errorMessage = e.Message;
+                    errorData = e.Data.ToString();
+                    error = e.ToString();
                 }
             }
             else
@@ -263,6 +321,6 @@
             }
         }
 
-        
+
     }
 }

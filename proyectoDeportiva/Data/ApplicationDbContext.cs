@@ -19,6 +19,8 @@ namespace proyectoDeportiva.Data
             builder.Entity<User>().ToTable("user");
             builder.Entity<Reserva>().ToTable("reserva");
             builder.Entity<Pista>().ToTable("pista");
+            builder.Entity<TipoDeporte>().ToTable("tipodeporte");
+            builder.Entity<Estado>().ToTable("estado");
         }
 
 
@@ -26,6 +28,8 @@ namespace proyectoDeportiva.Data
 
         public DbSet<Reserva>? Reservas { get; set; }
         public DbSet<Pista>? Pistas { get; set; }
+        public DbSet<TipoDeporte>? TipoDeportes { get; set; }
+        public DbSet<Estado>? Estados { get; set; }
 
     }
 }

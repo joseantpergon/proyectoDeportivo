@@ -1,0 +1,164 @@
+﻿@using Microsoft.AspNetCore.Identity;
+@using Microsoft.AspNetCore.Http;
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using System.Drawing
+@using System.Globalization
+@using Color = MudBlazor.Color
+@using System.Collections.Immutable
+@using proyectoDeportiva.Areas.Identity.Data
+@using proyectoDeportiva.Data;
+@using Microsoft.EntityFrameworkCore
+
+@inject UserManager<User> _UserManager
+@inject AuthenticationStateProvider _auth
+@inject ApplicationDbContext _ApplicationDbContext;
+@inject IHttpContextAccessor _httpContextAccessor
+@inject IJSRuntime _jSRuntime
+@inject NavigationManager _navigationManager
+@inject IDialogService DialogService
+
+<!-- Ventana de Dialog -->
+<MudDialog>
+	<!-- Contenido del Dialog -->
+	<DialogContent>
+		<!-- Formulario -->
+		 <MudForm @ref="form" @bind-IsValid="@success" >
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudPaper>
+                        <MudTextField @bind-Value="pista.Nombre" Label="Nombre de la pista" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    </MudPaper>
+                    <MudSelect Label="Estado" @bind-Value="pista.Estado" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        @foreach (var item in lstEstados)
+                        {
+                            <MudSelectItem Value="@item">@item.Nombre</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect Label="Tipo de Deporte" @bind-Value="pista.TipoDeporte" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        @foreach (var item in lstTiposDeporte)
+                        {
+                            <MudSelectItem Value="@item">@item.Nombre</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudTextField T="TimeSpan" Label="Horario de Apertura" @bind-Value="pista.HorarioApertura" InputType="InputType.Time"/>
+                    <MudTextField T="TimeSpan" Label="Horario de Cierre" @bind-Value="pista.HorarioCierre" InputType="InputType.Time"/>
+
+                    <MudNumericField Label="Capacidad Maxima de Personas" @bind-Value="pista.CapacidadMaxima" Variant="Variant.Text" /> 
+                   
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+	</DialogContent>
+	<!-- Botones del Dialog-->
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    //Variables y Parametros
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public Pista pista { get; set; }
+
+    public Estado estado { get; set; }
+    public TipoDeporte tipoDeporte { get; set; }
+
+    MudForm form;
+    bool success;
+    string[] errors = { };
+    List<Pista> lstPista = new List<Pista>();
+    List<Estado> lstEstados = new List<Estado>();
+    List<TipoDeporte> lstTiposDeporte = new List<TipoDeporte>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        bool wait = true;
+        while (wait)
+        {
+            try
+            {
+                if (pista == null)
+                {
+                    pista = new Pista();
+                }
+                if (pista.Id != 0 && pista != null)
+                {
+                    pista = _ApplicationDbContext.Pistas.FirstOrDefault(u => u.Id == pista.Id);
+                }
+                
+                await cargarTipoDeporte();
+                await cargarEstados();     
+                await cargarPistas();
+                
+                wait = false;
+        }
+        catch (InvalidOperationException e)
+        {
+            await Task.Delay(100);
+        }
+    }
+
+
+
+
+}
+
+
+private bool resetValueOnEmptyText;
+private bool coerceText;
+private bool coerceValue;
+
+//Boton de cancelar
+void Cancel()
+{
+    MudDialog.Cancel();
+    _ApplicationDbContext.Entry(pista).Reload();
+}
+
+//Boton de enviar
+private async Task Submit()
+{
+        await form.Validate();
+
+    if (form.IsValid)
+    {
+        try
+        {
+            if (pista.Id != 0 && pista.Id != null)
+            {
+                //Editar Proyecto
+                _ApplicationDbContext.Pistas.Update(pista);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(pista.Nombre))
+                {
+                    //Añadir nuevo proyecto
+                    _ApplicationDbContext.Pistas.Add(pista);
+                }
+                else
+                {
+                    await DialogService.ShowMessageBox("Error", "El nombre de la pista es obligatorio");
+                    return;
+                }
+            }
+            // Guarda los cambios en la base de datos.
+            _ApplicationDbContext.SaveChanges();
+            //Cerrar el Dialog
+            MudDialog.Close(DialogResult.Ok<Pista>(pista));
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowMessageBox("Error", ex.Message);
+        }
+    }
+}
+async Task cargarTipoDeporte() => lstTiposDeporte = _ApplicationDbContext.TipoDeportes.ToList();
+async Task cargarEstados() => lstEstados = _ApplicationDbContext.Estados.ToList();
+async Task cargarPistas() => lstPista = _ApplicationDbContext.Pistas.Include(it => it.Estado).Include(it => it.TipoDeporte).ToList();
+
+
+}
