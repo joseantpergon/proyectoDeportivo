@@ -19,15 +19,15 @@
 @inject IHttpContextAccessor _httpContextAccessor
 @inject IDialogService _dialogService;
 
-<MudTabs  Outlined="true">
-    <MudTabPanel Text="Usuarios" Icon="@Icons.Material.Filled.Person" >
-        <MudGrid>
-            <MudItem xs="12" md="12">
-                <MudPaper Style="margin:auto; padding:15px" MaxWidth="1000px" Width="80%">
-                    <h4>Crear nuevo usuario</h4>
-                    <MudText Style="color:red" if="@errorMessage">@errorMessage</MudText>
-                    <MudForm @ref="form">
 
+<MudDialog>
+	<!-- Contenido del Dialog -->
+	<DialogContent>
+		<!-- Formulario -->
+		 <MudText Style="color:red" if="@errorMessage">@errorMessage</MudText>
+           <MudForm @ref="form" @bind-IsValid="@success" >
+            <MudGrid>
+                <MudItem xs="12">
                         <MudTextField @bind-Value="userName" Label="Nombre" Required Validation="@NameValidation" />
                          <MudTextField @bind-Value="userSurname" Label="Apellidos" Required Validation="@SurnameValidation" />
                          <MudTextField Label="Email" @bind-Value="userEmail" Required Validation="@EmailValidation" />
@@ -38,25 +38,29 @@
                         </MudSelect>
                         <MudTextField Label="DNI" @bind-Value="userDNI" Required="true" Validation="@DNIValidation" />
                         <MudDatePicker Label="Fecha de nacimiento" Editable="true" @bind-Date="userFechaNacimiento" Mask="@(new DateMask("dd/MM/yyyy"))" DateFormat="dd/MM/yyyy" />
-
-
-                        <MudButton OnClick="Submit" Style="margin: 20px" Color="Color.Dark" Variant="Variant.Filled">Crear Usuario</MudButton>
-                    </MudForm>
-
-                </MudPaper>
-                </MudItem>
-        </MudGrid>
-    </MudTabPanel>
-</MudTabs>
-
-
+               </MudItem>
+             </MudGrid>
+           </MudForm>
+    </DialogContent>
+    <!-- Botones del Dialog-->
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancelar</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Crear pista</MudButton>
+    </DialogActions>
+</MudDialog>
 
 
 @code {
-
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public User User { get; set; }
+    
+    private List<User> ListaUser = new List<User>();
+    
     private string searchTerm = "";
     private List<User> users = new List<User>();
     private List<User> filteredUsers => users.Where(u => u.UserName.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+    //Variables
+    bool success;
 
     private string userName;
     private string userSurname;
@@ -77,12 +81,12 @@
     private string errorData;
     private string errorMessage;
 
-
+    //Variables del select para introducir los roles
     private string RoleAdmin = "ADMIN";
 
     private string RoleUser = "USER";
 
-
+    //Al iniciar la pagina
     protected override async void OnInitialized()
     {
         bool bucle = true;
@@ -103,17 +107,7 @@
 
     }
 
-
-    private List<User> FilterUsers()
-    {
-        if (string.IsNullOrWhiteSpace(searchTerm))
-        {
-            return users;
-        }
-
-        // Filtra los usuarios por el término de búsqueda que comienza con el nombre del usuario
-        return users.Where(u => u.UserName.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
-    }
+    //Validaciones
 
     private string NameValidation(string name)
     {
@@ -216,7 +210,7 @@
         return validLetters[remainder];
     }
 
-
+    //Funcion para generar el nombre de Usuario
     public string GenerateUsername(string name, string surname)
     {
         var generatedUsername = "";
@@ -238,7 +232,13 @@
 
         return generatedUsername;
     }
-
+    //Boton de cancelar
+    void Cancel()
+    {
+        MudDialog.Cancel();
+        _ApplicationDbContext.Entry(User).Reload();
+    }
+    //Boton enviar
     private async void Submit()
     {
 
@@ -296,7 +296,6 @@
 
                     // Usa el UserManager para crear el usuario y asignar la contraseña
                     var result = await _UserManager.CreateAsync(newUser, password);
-
                     // Si la creación del usuario no tiene éxito, muestra el mensaje de error
                     if (!result.Succeeded)
                     {

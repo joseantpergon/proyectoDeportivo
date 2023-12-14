@@ -26,7 +26,7 @@
 		 <MudForm @ref="form" @bind-IsValid="@success" >
             <MudGrid>
                 <MudItem xs="12">
-                 <MudTextField Label="Nombre" @bind-Value="user.UserName" Required />
+                    <MudTextField Label="Nombre" @bind-Value="user.UserName" Required />
                  <MudTextField Label="Email" @bind-Value="user.Email" Required />
                  <MudTextField Label="Número de Teléfono" @bind-Value="user.PhoneNumber" Required />
                  <MudSelect Label="Rol" @bind-Value="user.Rol" Required>
