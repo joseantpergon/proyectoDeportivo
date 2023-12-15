@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "75AkHgJz8lHirNPtMCLIgCye95ulGkRhglcdKlqbTiw8K46rwVZfYG7DwBrtkpOaiqn5nnDC2mRq3taq37sK/Q==",
+  "dgSpecHash": "CGntr/9ISO7vJ8j8TH+ggLJFqSHdYclPzLWczftlvJZ0XaRj25PabId5RTXlSFxnpDOzDVi4BLS9rINJjnRlLQ==",
   "success": true,
-  "projectFilePath": "C:\\Users\\user\\source\\repos\\reposProyectoDeportivo\\proyectoDeportivo\\proyectoDeportiva\\proyectoDeportiva.csproj",
+  "projectFilePath": "C:\\Users\\user\\source\\repos\\proyectoDeportiva\\proyectoDeportiva\\proyectoDeportiva.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\user\\.nuget\\packages\\azure.core\\1.25.0\\azure.core.1.25.0.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\azure.identity\\1.7.0\\azure.identity.1.7.0.nupkg.sha512",
