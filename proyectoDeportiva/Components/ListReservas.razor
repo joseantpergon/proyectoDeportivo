@@ -140,12 +140,12 @@
         }
     }
 
-    //Carga a los Usuarios
+    //Carga las reservas
     private async Task CargarReserva()
     {
         try
         {
-            //Crea una lista de los Usuarios
+            //Crea una lista de las reservas
             ListaReserva = _ApplicationDbContext.Reservas.Include(it => it.Pista).Include(it => it.Usuario).ToList();
             StateHasChanged();
         }
@@ -180,7 +180,7 @@
     private async void EliminarReserva(Reserva resv)
     {
 
-        var result = await _dialogService.ShowMessageBox("Eliminar Reserva", "¿Estas seguro de que quieres eliminar la siguiente reserva?", "Si", "No");
+        var result = await _dialogService.ShowMessageBox("Eliminar Reserva", "¿Estas seguro de que quieres eliminar la reserva seleccionada?", "Si", "No");
         resv = _ApplicationDbContext.Reservas.FirstOrDefault(it => it.Id == resv.Id);
 
         if (result is true && resv != null)

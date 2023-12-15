@@ -49,6 +49,13 @@ builder.Services.AddSession(options =>
     options.Cookie.Name = "User.Session";
 });
 
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.Password.RequireUppercase = false;
+    options.User.AllowedUserNameCharacters =
+       "abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789-._@+áéíóúÁÉÍÓÚ";
+    // Otros requisitos de contraseña aquí...
+});
 
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();

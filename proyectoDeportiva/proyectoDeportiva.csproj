@@ -8,6 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Components\NewFolder\**" />
+    <Content Remove="Components\NewFolder\**" />
+    <EmbeddedResource Remove="Components\NewFolder\**" />
+    <None Remove="Components\NewFolder\**" />
+  </ItemGroup>
+
+  <ItemGroup>
 
     <Content Remove="Components\newPista.razor" />
   </ItemGroup>

@@ -52,7 +52,7 @@
         <TemplateColumn CellClass="d-flex justify-end" Sortable="false">
             <CellTemplate>
                 <!-- Editar Pista -->
-                <MudTooltip Text="Editar Pistas">
+                <MudTooltip Text="Editar">
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@((e) => { EditPistaDialog(context.Item); })" />
                 </MudTooltip>
                 <!-- Eliminar Pista -->
@@ -125,15 +125,14 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        bool wait = true;
-        while (wait)
+        while (true)
         {
             try
             {
                 navegacionPistas.Push(pistas);
                 await CargarPista();
                 _selectedPage = 0;
-                wait = false;
+                break;
             }
             catch (InvalidOperationException e)
             {
@@ -170,7 +169,7 @@
     private async void EliminarPista(Pista pts)
     {
 
-        var result = await _dialogService.ShowMessageBox("Eliminar Pista", "¿Estas seguro de que quieres eliminar la siguiente pista?", "Si", "No");
+        var result = await _dialogService.ShowMessageBox("Eliminar Pista", "¿Estas seguro de que quieres eliminar la pista seleccionada?", "Si", "No");
         pts = _ApplicationDbContext.Pistas.FirstOrDefault(it => it.Id == pts.Id);
 
         if (result is true && pts != null)

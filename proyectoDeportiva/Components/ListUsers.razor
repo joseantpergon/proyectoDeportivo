@@ -52,7 +52,7 @@
         <TemplateColumn CellClass="d-flex justify-end" Sortable="false">
             <CellTemplate>
                 <!-- Editar Usuario -->
-                <MudTooltip Text="Editar Usuarios">
+                <MudTooltip Text="Editar">
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@((e) => { EditUsersDialog(context.Item); })" />
                 </MudTooltip>
                 <!-- Eliminar Usuario -->
@@ -171,7 +171,7 @@
     private async void crearUsuario()
     {
         var options = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true };
-        var dialog = await _dialogService.Show<Pages.UsersPage>("Crear Nuevo Usuario", options).Result;
+        var dialog = await _dialogService.Show<NewUserDialog>("Crear Nuevo Usuario", options).Result;
 
         if (dialog.Data != null)
         {
@@ -184,7 +184,7 @@
     private async void EliminarUsuario(User Usr)
     {
 
-        var result = await _dialogService.ShowMessageBox("Eliminar Usuario", "¿Estas seguro de que quieres eliminar al siguiente usuario?", "Si", "No");
+        var result = await _dialogService.ShowMessageBox("Eliminar Usuario", "¿Estas seguro de que quieres eliminar al usuario seleccionado?", "Si", "No");
         Usr = _ApplicationDbContext.Users.FirstOrDefault(it => it.Id == Usr.Id);
 
         if (result is true && Usr != null)
@@ -208,7 +208,7 @@
         var parameters = new DialogParameters();
         parameters.Add("User", Usr);
 
-        var dialog = await _dialogService.Show<NewUserDialog>("Editar Usuario", parameters, options).Result;
+        var dialog = await _dialogService.Show<EditUserDialog>("Editar Usuario", parameters, options).Result;
         if (dialog.Data != null)
         {
             await CargarUser();
