@@ -2,7 +2,6 @@
 @using Microsoft.EntityFrameworkCore;
 @using proyectoDeportiva.Areas.Identity.Data
 @using proyectoDeportiva.Data
-@using proyectoDeportiva.Components
 @using MudBlazor
 @using System.Globalization
 
@@ -10,61 +9,64 @@
 
 @inject ApplicationDbContext _ApplicationDbContext
 
-@if (pistas != null && pistas.Any())
+<h3>Pistas</h3>
+
+@foreach (var pista in pistas)
 {
 
-    
-        <MudCard>
-            <MudCardContent>
-                <h1>@pista.Nombre</h1>
-                <h3>
-                    Estado:
-                </h3>
-                <p>
-                    @pista.Estado.Nombre @if (pista.Estado.Nombre == "DISPONIBLE")
-                    {
-                        <MudIcon Icon="@Icons.Filled.CheckCircle" Color="Color.Success" />
-                    }
-                    else
-                    {
-                        <MudIcon Icon="@Icons.Filled.DoDisturbOn" Color="Color.Secondary" />
-                    }
-                </p>
-            </MudCardContent>
-            <MudLink  Href="@($"/pistas/{pista.Id}")" >
-                Ver Pista
-            </MudLink>
-        </MudCard>
-    
-    
-
-
- 
-    bool isPistaOcupada = pista.Estado.Nombre == "OCUPADA";
-   
-    <MudExpansionPanels MultiExpansion="true" Style="max-width: 1000px; width: 80%">
-
-        <MudExpansionPanel Text="@pista.Nombre">
             <MudCard>
                 <MudCardContent>
-                    <h2>
+                    <h1>@pista.Nombre</h1>
+                    <h3>
                         Estado:
-                    </h2>
+                    </h3>
                     <p>
+                @pista.Estado.Nombre @if (pista.Estado.Nombre == "DISPONIBLE")
+                {
+                                <MudIcon Icon="@Icons.Filled.CheckCircle" Color="Color.Success" />
+                }
+                else
+                {
+                                <MudIcon Icon="@Icons.Filled.DoDisturbOn" Color="Color.Secondary" />
+                }
+                    </p>
+                </MudCardContent>
+                <MudLink  Href="@($"/pistas/{pista.Id}")" >
+                    Ver Pista
+                </MudLink>
+            </MudCard>
+
+
+
+
+
+    bool isPistaOcupada = pista.Estado.Nombre == "OCUPADA";
+
+        <MudExpansionPanels MultiExpansion="true" Style="max-width: 1000px; width: 80%">
+
+            <MudExpansionPanel Text="@pista.Nombre">
+                <MudCard>
+                    <MudCardContent>
+                        <h2>
+                            Estado:
+                        </h2>
+                        <p>
                         @pista.Estado @if (pista.Estado.Nombre == "DISPONIBLE")
                         {
-                            <MudIcon Icon="@Icons.Filled.CheckCircle" Color="Color.Success" />
-                        } else {
-                            <MudIcon Icon="@Icons.Filled.DoDisturbOn" Color="Color.Secondary"/>
+                                    <MudIcon Icon="@Icons.Filled.CheckCircle" Color="Color.Success" />
                         }
-                    </p>
-                    <div>
-                        <h2>
-                            Seleccione la hora de reserva:
-                        </h2>
+                        else
+                        {
+                                    <MudIcon Icon="@Icons.Filled.DoDisturbOn" Color="Color.Secondary"/>
+                        }
+                        </p>
+                        <div>
+                            <h2>
+                                Seleccione la hora de reserva:
+                            </h2>
 
 
-                        <MudSelect T="string" Label="Hora de Reserva" @bind-Value="horaSeleccionada[pista.Id]">
+                            <MudSelect T="string" Label="Hora de Reserva" @bind-Value="horaSeleccionada[pista.Id]">
                             @foreach (var hora in getHorario(pista))
                             {
                                 var horaReservada = reservas.Any(r =>
@@ -74,25 +76,23 @@
 
                                 var disabled = horaReservada || (horaSeleccionada[pista.Id] == hora.ToString("hh\\:mm") && horaReservada);
 
-                                <MudSelectItem Value="@hora.ToString("hh\\:mm")" Disabled="@disabled">
+                                        <MudSelectItem Value="@hora.ToString("hh\\:mm")" Disabled="@disabled">
                                     @hora.ToString("hh\\:mm")
-                                </MudSelectItem>
+                                        </MudSelectItem>
                             }
-                        </MudSelect>
-                        <MudButton OnClick="@(() => ReservarPistaConHora(pista, horaSeleccionada[pista.Id]))">Reservar</MudButton>
-                    </div>
+                            </MudSelect>
+                            <MudButton OnClick="@(() => ReservarPistaConHora(pista, horaSeleccionada[pista.Id]))">Reservar</MudButton>
+                        </div>
 
-                    
-                }
-
+                    </MudCardContent>
 
 
-            </MudCard>
-        </MudExpansionPanel>
+                </MudCard>
+            </MudExpansionPanel>
 
-    </MudExpansionPanels> 
-
+        </MudExpansionPanels> 
 }
+
 @code {
     List<Reserva> reservas;
     List<Pista> pistas;
@@ -103,65 +103,64 @@
     DateTime horaFin;
     Dictionary<int, string> horaSeleccionada = new Dictionary<int, string>();
 
-
     public Estado estado { get; set; }
-    
 
-     private List<TimeSpan> getHorario(Pista pista)
-     {
-         List<TimeSpan> horario = new List<TimeSpan>();
 
-         // Verificar que tanto la apertura como el cierre tienen valores
-         if (pista.HorarioApertura != null && pista.HorarioCierre != null)
-         {
-             TimeSpan horaActual = pista.HorarioApertura;
+    private List<TimeSpan> getHorario(Pista pista)
+    {
+        List<TimeSpan> horario = new List<TimeSpan>();
 
-             // Agregar cada hora a la lista hasta llegar al cierre
-             while (horaActual <= pista.HorarioCierre)
-             {
-                 horario.Add(horaActual);
-                 horaActual = horaActual.Add(new TimeSpan(1, 0, 0)); // Sumar una hora
-             }
-         }
+        // Verificar que tanto la apertura como el cierre tienen valores
+        if (pista.HorarioApertura != null && pista.HorarioCierre != null)
+        {
+            TimeSpan horaActual = pista.HorarioApertura;
 
-         return horario;
-     }
+            // Agregar cada hora a la lista hasta llegar al cierre
+            while (horaActual <= pista.HorarioCierre)
+            {
+                horario.Add(horaActual);
+                horaActual = horaActual.Add(new TimeSpan(1, 0, 0)); // Sumar una hora
+            }
+        }
 
-     private void createReserva(Pista pista)
-     {
+        return horario;
+    }
 
-     }
+    private void createReserva(Pista pista)
+    {
 
-     private void ReservarPistaConHora(Pista pista, string horaSeleccionadaString)
-     {
-         // Implementa la lógica para crear una nueva reserva con la hora seleccionada y la pista
-         // Actualiza la base de datos y la lista de reservas si es necesario
-         // También puedes mostrar un mensaje de confirmación u otros elementos de IU según sea necesario
+    }
 
-         if (TimeSpan.TryParseExact(horaSeleccionadaString, "hh\\:mm", CultureInfo.InvariantCulture, out var horaSeleccionadaTiempo))
-         {
-             // Crea la reserva con la hora seleccionada y la pista
-             Reserva nuevaReserva = new Reserva
-                 {
-                     FechaReserva = DateTime.Now, // Puedes ajustar la fecha según tus necesidades
-                     HoraInicio = horaSeleccionadaTiempo,
-                     HoraFin = horaSeleccionadaTiempo.Add(new TimeSpan(1, 0, 0)), // Por ejemplo, la reserva dura una hora
-                     Usuario = null,// Ajusta esto según cómo manejas los usuarios
-                     Pista = pista
-                 };
+    private void ReservarPistaConHora(Pista pista, string horaSeleccionadaString)
+    {
+        // Implementa la lógica para crear una nueva reserva con la hora seleccionada y la pista
+        // Actualiza la base de datos y la lista de reservas si es necesario
+        // También puedes mostrar un mensaje de confirmación u otros elementos de IU según sea necesario
 
-             // Agrega la reserva a la base de datos y actualiza la lista de reservas
-             _ApplicationDbContext.Reservas.Add(nuevaReserva);
-             _ApplicationDbContext.SaveChanges();
+        if (TimeSpan.TryParseExact(horaSeleccionadaString, "hh\\:mm", CultureInfo.InvariantCulture, out var horaSeleccionadaTiempo))
+        {
+            // Crea la reserva con la hora seleccionada y la pista
+            Reserva nuevaReserva = new Reserva
+                {
+                    FechaReserva = DateTime.Now, // Puedes ajustar la fecha según tus necesidades
+                    HoraInicio = horaSeleccionadaTiempo,
+                    HoraFin = horaSeleccionadaTiempo.Add(new TimeSpan(1, 0, 0)), // Por ejemplo, la reserva dura una hora
+                    Usuario = null,// Ajusta esto según cómo manejas los usuarios
+                    Pista = pista
+                };
 
-             // Otras acciones según sea necesario, como cerrar el diálogo de reserva
-             isReservaDialogVisible = false;
-         }
-         else
-         {
-             // Manejar el caso en que la conversión de la hora falle
-         }
-     }
+            // Agrega la reserva a la base de datos y actualiza la lista de reservas
+            _ApplicationDbContext.Reservas.Add(nuevaReserva);
+            _ApplicationDbContext.SaveChanges();
+
+            // Otras acciones según sea necesario, como cerrar el diálogo de reserva
+            isReservaDialogVisible = false;
+        }
+        else
+        {
+            // Manejar el caso en que la conversión de la hora falle
+        }
+    }
 
     protected override void OnInitialized()
     {
@@ -169,26 +168,11 @@
         pistas = _ApplicationDbContext.Pistas.Include(it => it.Estado).Include(it => it.TipoDeporte).ToList();
         estados = _ApplicationDbContext.Estados.ToList();
         foreach (var pista in pistas)
-
         {
-            try
-            {
-                reservas = _ApplicationDbContext.Reservas.ToList();
-                pistas = _ApplicationDbContext.Pistas.ToList();
-                foreach (var pista in pistas)
-                {
-                    horaSeleccionada[pista.Id] = pista.HorarioApertura.ToString("hh\\:mm") ?? string.Empty;
-                }
-                bucle = false;
-            }catch(InvalidOperationException e)
-            {
-                await Task.Delay(100);
-            }
-
+            horaSeleccionada[pista.Id] = pista.HorarioApertura.ToString("hh\\:mm") ?? string.Empty;
         }
     }
 
 
-    
-}
 
+}

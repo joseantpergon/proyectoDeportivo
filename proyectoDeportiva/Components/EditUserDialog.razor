@@ -1,0 +1,150 @@
+﻿@using Microsoft.AspNetCore.Identity;
+@using Microsoft.AspNetCore.Http;
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using System.Drawing
+@using System.Globalization
+@using Color = MudBlazor.Color
+@using System.Collections.Immutable
+@using proyectoDeportiva.Areas.Identity.Data
+@using proyectoDeportiva.Data;
+@using Microsoft.EntityFrameworkCore
+
+@inject UserManager<User> _UserManager
+@inject AuthenticationStateProvider _auth
+@inject ApplicationDbContext _ApplicationDbContext;
+@inject IHttpContextAccessor _httpContextAccessor
+@inject IJSRuntime _jSRuntime
+@inject NavigationManager _navigationManager
+@inject IDialogService DialogService
+
+<!-- Ventana de Dialog -->
+<MudDialog>
+	<!-- Contenido del Dialog -->
+	<DialogContent>
+		<!-- Formulario -->
+		 <MudForm @ref="form" @bind-IsValid="@success" >
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField Label="Nombre" @bind-Value="user.UserName" Required />
+                 <MudTextField Label="Email" @bind-Value="user.Email" Required />
+                 <MudTextField Label="Número de Teléfono" @bind-Value="user.PhoneNumber" Required />
+                 <MudSelect Label="Rol" @bind-Value="user.Rol" Required>
+                    <MudSelectItem Value="RoleUser">Usuario</MudSelectItem>
+                    <MudSelectItem Value="RoleAdmin">Administrador</MudSelectItem>
+                </MudSelect>
+                <MudTextField Label="DNI" @bind-Value="user.DNI" Required="true" />
+                <MudDatePicker Label="Fecha de nacimiento" Editable="true" @bind-value="user.FechaNacimiento" Mask="@(new DateMask("dd/MM/yyyy"))" DateFormat="dd/MM/yyyy" />
+                   
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+	</DialogContent>
+	<!-- Botones del Dialog-->
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancelar</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    //Variables y Parametros
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public User user { get; set; }
+
+    MudForm form;
+    bool success;
+    string[] errors = { };
+    List<User> lstUser = new List<User>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        bool wait = true;
+        while (wait)
+        {
+            try
+            {
+                if (user == null)
+                {
+                    user = new User();
+                }
+                if (user != null)
+                {
+                    user = _ApplicationDbContext.Users.FirstOrDefault(u => u.Id == user.Id);
+                }
+                
+                await cargarUsers();
+                
+                wait = false;
+        }
+        catch (InvalidOperationException e)
+        {
+            await Task.Delay(100);
+        }
+    }
+
+
+
+
+}
+
+
+private bool resetValueOnEmptyText;
+private bool coerceText;
+private bool coerceValue;
+
+//Administracion de los roles
+private string RoleAdmin = "ADMIN";
+
+private string RoleUser = "USER";
+
+//Boton de cancelar
+private void Cancel()
+{
+    MudDialog.Cancel();
+    //_ApplicationDbContext.Entry(user).Reload();
+}
+
+//Boton de enviar
+private async Task Submit()
+{
+        await form.Validate();
+
+    if (form.IsValid)
+    {
+        try
+        {
+            if (user.Id != null)
+            {
+                //Editar Proyecto
+                _ApplicationDbContext.Users.Update(user);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(user.UserName))
+                {
+                    //Añadir nuevo proyecto
+                    _ApplicationDbContext.Users.Add(user);
+                }
+                else
+                {
+                    await DialogService.ShowMessageBox("Error", "El nombre del usuario es obligatorio");
+                    return;
+                }
+            }
+            // Guarda los cambios en la base de datos.
+            _ApplicationDbContext.SaveChanges();
+            //Cerrar el Dialog
+            MudDialog.Close(DialogResult.Ok<User>(user));
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowMessageBox("Error", ex.Message);
+        }
+    }
+}
+async Task cargarUsers() => lstUser = _ApplicationDbContext.Users.ToList();
+
+}

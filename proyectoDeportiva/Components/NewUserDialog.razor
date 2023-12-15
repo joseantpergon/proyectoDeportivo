@@ -19,31 +19,46 @@
 @inject IDialogService DialogService
 
 <!-- Ventana de Dialog -->
-<MudDialog>
-	<!-- Contenido del Dialog -->
-	<DialogContent>
-		<!-- Formulario -->
-		 <MudForm @ref="form" @bind-IsValid="@success" >
+<MudDialog >
+    <!-- Contenido del Dialog -->
+    <DialogContent>
+        <!-- Formulario -->
+        <MudText Style="color:red" if="@errorMessage">@errorMessage</MudText>
+         <MudForm @ref="form" @bind-IsValid="@success" >
             <MudGrid>
                 <MudItem xs="12">
-                 <MudTextField Label="Nombre" @bind-Value="user.UserName" Required />
-                 <MudTextField Label="Email" @bind-Value="user.Email" Required />
-                 <MudTextField Label="Número de Teléfono" @bind-Value="user.PhoneNumber" Required />
-                 <MudSelect Label="Rol" @bind-Value="user.Rol" Required>
-                    <MudSelectItem Value="RoleUser">Usuario</MudSelectItem>
-                    <MudSelectItem Value="RoleAdmin">Administrador</MudSelectItem>
-                </MudSelect>
-                <MudTextField Label="DNI" @bind-Value="user.DNI" Required="true" />
-                <MudDatePicker Label="Fecha de nacimiento" Editable="true" @bind-value="user.FechaNacimiento" Mask="@(new DateMask("dd/MM/yyyy"))" DateFormat="dd/MM/yyyy" />
-                   
+                    <MudPaper>
+                        <MudTextField @bind-Value="userName" Label="Nombre" Required Validation="@NameValidation" />
+                    </MudPaper>
+                    <MudPaper>
+                        <MudTextField @bind-Value="userSurname" Label="Apellidos" Required Validation="@SurnameValidation" />
+                    </MudPaper>
+                    <MudPaper>
+                        <MudTextField Label="Email" @bind-Value="userEmail" Required Validation="@EmailValidation" />
+                    </MudPaper>
+                    <MudPaper>
+                        <MudTextField Label="Número de Teléfono" @bind-Value="userPhone" Required Validation="@PhoneValidation" />
+                    </MudPaper>
+                    <MudPaper>
+                        <MudSelect Label="Rol" @bind-Value="userRole" Required>
+                            <MudSelectItem Value="RoleUser">Usuario</MudSelectItem>
+                            <MudSelectItem Value="RoleAdmin">Administrador</MudSelectItem>
+                        </MudSelect>
+                    </MudPaper>
+                    <MudPaper>
+                         <MudTextField Label="DNI" @bind-Value="userDNI" Required="true" Validation="@DNIValidation" />
+                    </MudPaper>
+                    <MudPaper>
+                        <MudDatePicker Label="Fecha de nacimiento" Editable="true" @bind-Date="userFechaNacimiento" Mask="@(new DateMask("dd/MM/yyyy"))" DateFormat="dd/MM/yyyy" />
+                    </MudPaper>
                 </MudItem>
             </MudGrid>
         </MudForm>
-	</DialogContent>
-	<!-- Botones del Dialog-->
+    </DialogContent>
+    <!-- Botones del Dialog-->
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+        <MudButton OnClick="Cancel">Cancelar</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Crear Usuario</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -52,11 +67,31 @@
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
     [Parameter] public User user { get; set; }
 
-    MudForm form;
-    bool success;
-    string[] errors = { };
     List<User> lstUser = new List<User>();
 
+    MudForm form;
+
+    bool success;
+
+    private string userName;
+    private string userSurname;
+    private string userUserName;
+
+    private string userEmail;
+    private string userPhone;
+    private string userRole;
+    private string userDNI;
+    private DateTime? userFechaNacimiento;
+    private DateTime userFechaRegistro;
+
+    private string error;
+    private string errorData;
+    private string errorMessage;
+
+    //Variables del select para introducir los roles
+    private string RoleAdmin = "ADMIN";
+
+    private string RoleUser = "USER";
 
     protected override async Task OnInitializedAsync()
     {
@@ -66,85 +101,242 @@
         {
             try
             {
-                if (user == null)
-                {
-                    user = new User();
-                }
-                if (user != null)
-                {
-                    user = _ApplicationDbContext.Users.FirstOrDefault(u => u.Id == user.Id);
-                }
-                
+                user = new User();
+
                 await cargarUsers();
-                
+
                 wait = false;
-        }
-        catch (InvalidOperationException e)
+            }
+            catch (InvalidOperationException e)
+            {
+                await Task.Delay(100);
+            }
+    }
+    }
+    //Validaciones
+
+    private string NameValidation(string name)
+
+    {
+        if (string.IsNullOrWhiteSpace(name))
         {
-            await Task.Delay(100);
+            return "¡El nombre es obligatorio!";
         }
+
+        // Puedes agregar otras validaciones según tus necesidades
+
+        return null;
+    }
+
+    private string SurnameValidation(string surname)
+    {
+        if (string.IsNullOrWhiteSpace(surname))
+        {
+            return "¡Los apellidos son obligatorios!";
+
+        }
+
+        // Puedes agregar otras validaciones según tus necesidades
+
+        return null;
     }
 
 
+    private string EmailValidation(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return "¡El correo electrónico es obligatorio!";
+        }
 
 
-}
+        // Verificar que el correo electrónico tiene un formato válido
+        if (!IsValidEmail(email))
+        {
+            return "El formato del correo electrónico no es válido.";
+        }
 
+        return null;
+    }
 
-private bool resetValueOnEmptyText;
-private bool coerceText;
-private bool coerceValue;
-
-//Administracion de los roles
-private string RoleAdmin = "ADMIN";
-
-private string RoleUser = "USER";
-
-//Boton de cancelar
-void Cancel()
-{
-    MudDialog.Cancel();
-    _ApplicationDbContext.Entry(user).Reload();
-}
-
-//Boton de enviar
-private async Task Submit()
-{
-        await form.Validate();
-
-    if (form.IsValid)
+    private bool IsValidEmail(string email)
     {
         try
         {
-            if (user.Id != null)
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private string PhoneValidation(string phoneNumber)
+    {
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+        {
+            return "¡El número de teléfono es obligatorio!";
+        }
+
+        // Verificar que el número de teléfono tiene 9 dígitos
+        if (!Regex.IsMatch(phoneNumber, @"^\d{9}$"))
+        {
+            return "Número de teléfono inválido. Debe contener 9 dígitos.";
+        }
+
+        return null;
+    }
+
+    private string DNIValidation(string dni)
+    {
+        if (string.IsNullOrWhiteSpace(dni))
+        {
+            return "¡El DNI es obligatorio!";
+        }
+
+        // Verificar el formato del DNI (8 números + 1 letra)
+        if (!Regex.IsMatch(dni, @"^\d{8}[A-Za-z]$"))
+        {
+            return "Formato de DNI inválido. Por favor, ingrese 8 números seguidos de una letra.";
+        }
+
+        // Verificar la letra del DNI
+        var numbers = int.Parse(dni.Substring(0, 8));
+        var expectedLetter = GetDNILetter(numbers);
+
+        if (!dni.EndsWith(expectedLetter.ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            return "DNI inválido. La letra proporcionada no coincide con la letra esperada.";
+        }
+
+        return null;
+    }
+
+    private char GetDNILetter(int numbers)
+    {
+        string validLetters = "TRWAGMYFPDXBNJZSQVHLCKE";
+        int remainder = numbers % 23;
+        return validLetters[remainder];
+    }
+
+    //Funcion para generar el nombre de Usuario
+    public string GenerateUsername(string name, string surname)
+    {
+        var generatedUsername = "";
+
+        var nameParts = name.Split(' ');
+        foreach (var namePart in nameParts)
+        {
+            // Utiliza el método ToUpperInvariant para manejar las letras con tilde
+            generatedUsername += char.ToUpperInvariant(StringNormalizationExtensions.Normalize(namePart)[0]);
+        }
+
+        var surnameParts = surname.Split(' ');
+
+        foreach (var part in surnameParts)
+        {
+            // Utiliza el método ToLowerInvariant para manejar las letras con tilde
+            generatedUsername += StringNormalizationExtensions.Normalize(part).ToLowerInvariant();
+        }
+
+        return generatedUsername;
+    }
+    //Boton de cancelar
+    void Cancel()
+    {
+        MudDialog.Cancel();
+        _ApplicationDbContext.Entry(user).Reload();
+    }
+    //Boton enviar
+    private async Task Submit()
+    {
+
+        if (form != null)
+        {
+            // Utiliza la validación del modelo para verificar los datos
+            await form.Validate();
+            var isValid = form.IsValid;
+
+            if (isValid)
             {
-                //Editar Proyecto
-                _ApplicationDbContext.Users.Update(user);
+                errorMessage = "";
+
+                try
+                {
+                    userUserName = GenerateUsername(userName, userSurname);
+                    var userUserNameCap = char.ToUpper(userUserName[0]) + userUserName.Substring(1).ToLower();
+
+                    // Normaliza el nombre de usuario y el correo 
+                    var normalizedUserName = userName.ToUpper();
+                    var normalizedEmail = userEmail.ToUpper();
+                    var DNISinLetra = userDNI.Substring(0, 8);
+
+                    var password = DNISinLetra + "." + userUserNameCap;
+
+                    // Verifica si el correo electrónico ya existe en la base de datos
+                    var existingUser = await _UserManager.FindByEmailAsync(normalizedEmail);
+                    if (existingUser != null)
+                    {
+                        errorMessage = "El correo electrónico ya está registrado.";
+                        return;
+                    }
+
+                    userFechaRegistro = DateTime.Now;
+
+                    // Crea un nuevo usuario
+                    var newUser = new User()
+                        {
+                            Name = userName,
+
+                            Surname = userSurname,
+
+
+                            UserName = userUserName,
+                            NormalizedUserName = normalizedUserName,
+
+                            Email = userEmail,
+                            NormalizedEmail = normalizedEmail,
+
+                            PhoneNumber = userPhone,
+
+                            Rol = RoleUser,
+
+                            DNI = userDNI.ToUpper(),
+                            FechaNacimiento = userFechaNacimiento ?? DateTime.MinValue,
+                            FechaRegistro = userFechaRegistro,
+                            ProfilePicture = new byte[0],
+                        };
+
+                    // Usa el UserManager para crear el usuario y asignar la contraseña
+                    var result = await _UserManager.CreateAsync(newUser, password);
+                    // Si la creación del usuario no tiene éxito, muestra el mensaje de error
+                    if (!result.Succeeded)
+                    {
+                        errorMessage = "Error al crear el usuario: " + string.Join(", ", result.Errors.Select(error => error.Description));
+                    }
+
+                    // Guarda los cambios en la base de datos.
+                    _ApplicationDbContext.SaveChanges();
+                    //Cerrar el Dialog
+                    MudDialog.Close(DialogResult.Ok<User>(user));
+
+                }
+                catch (Exception e)
+                {
+                    errorMessage = e.Message;
+                    errorData = e.Data.ToString();
+                    error = e.ToString();
+                }
             }
             else
             {
-                if (!string.IsNullOrEmpty(user.UserName))
-                {
-                    //Añadir nuevo proyecto
-                    _ApplicationDbContext.Users.Add(user);
-                }
-                else
-                {
-                    await DialogService.ShowMessageBox("Error", "El nombre del usuario es obligatorio");
-                    return;
-                }
+                errorMessage = "Rellene todos los campos";
             }
-            // Guarda los cambios en la base de datos.
-            _ApplicationDbContext.SaveChanges();
-            //Cerrar el Dialog
-            MudDialog.Close(DialogResult.Ok<User>(user));
         }
-        catch (Exception ex)
-        {
-            await DialogService.ShowMessageBox("Error", ex.Message);
-        }
-    }
-}
-async Task cargarUsers() => lstUser = _ApplicationDbContext.Users.ToList();
 
+
+    }
+
+    async Task cargarUsers() => lstUser = _ApplicationDbContext.Users.ToList();
 }

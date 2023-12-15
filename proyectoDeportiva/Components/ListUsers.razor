@@ -31,8 +31,8 @@
 
         <MudSpacer />
         <MudSpacer />
-         <!-- Boton Crear Pistas -->
-        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Style="margin-top: 10px; margin-right: 5px;" @onclick="crearUsuario">Crear nueva pista</MudButton>
+         <!-- Boton Crear Usuarios -->
+        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Style="margin-top: 10px; margin-right: 5px;" @onclick="crearUsuario">Crear nuevo usuario</MudButton>
         <!-- Filtro -->
         <MudTextField @bind-Value="_searchString" Margin="Margin.Dense"
                       Placeholder="Buscar" Adornment="Adornment.Start" Immediate="true"
@@ -52,7 +52,7 @@
         <TemplateColumn CellClass="d-flex justify-end" Sortable="false">
             <CellTemplate>
                 <!-- Editar Usuario -->
-                <MudTooltip Text="Editar Usuarios">
+                <MudTooltip Text="Editar">
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@((e) => { EditUsersDialog(context.Item); })" />
                 </MudTooltip>
                 <!-- Eliminar Usuario -->
@@ -82,6 +82,7 @@
 </MudDialog>
 
 @code {
+    //Variables
     Stack<User> navegacionUsers = new Stack<User>();
     public bool activados = true;
     private bool _uploadInProgress;
@@ -121,7 +122,7 @@
         StateHasChanged();
     }
 
-    //Lo que carga al principio
+    //Funcion que se carga al iniciar esta pagina
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -166,25 +167,24 @@
         (it.FechaNacimiento.ToString().ToUpper().Contains(_searchString.ToUpper())));
     }
 
-    //Genera un Dialog para crear un usuario
+    //Funcion para crear usuarios
     private async void crearUsuario()
     {
         var options = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true };
-        var dialog = await _dialogService.Show<Pages.UsersPage>("Crear Nuevo Usuario", options).Result;
+        var dialog = await _dialogService.Show<NewUserDialog>("Crear Nuevo Usuario", options).Result;
 
         if (dialog.Data != null)
         {
-            CargarUser();
+            await CargarUser();
             StateHasChanged();
         }
-
     }
 
-    //Eliminar a un Usuario
+    //Funcion para eliminar a un Usuario
     private async void EliminarUsuario(User Usr)
     {
 
-        var result = await _dialogService.ShowMessageBox("Eliminar Usuario", "¿Estas seguro de que quieres eliminar al siguiente usuario?", "Si", "No");
+        var result = await _dialogService.ShowMessageBox("Eliminar Usuario", "¿Estas seguro de que quieres eliminar al usuario seleccionado?", "Si", "No");
         Usr = _ApplicationDbContext.Users.FirstOrDefault(it => it.Id == Usr.Id);
 
         if (result is true && Usr != null)
@@ -200,6 +200,7 @@
 
     }
 
+    //Funcion para editar a un usuario
     private async Task EditUsersDialog(User Usr)
     {
         var options = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, DisableBackdropClick = true, MaxWidth = MaxWidth.Medium };
@@ -207,7 +208,7 @@
         var parameters = new DialogParameters();
         parameters.Add("User", Usr);
 
-        var dialog = await _dialogService.Show<NewUserDialog>("Editar Usuario", parameters, options).Result;
+        var dialog = await _dialogService.Show<EditUserDialog>("Editar Usuario", parameters, options).Result;
         if (dialog.Data != null)
         {
             await CargarUser();
